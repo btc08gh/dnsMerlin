@@ -13,7 +13,7 @@
 ##           https://github.com/jackyaz/ntpMerlin           ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2024-Jul-03
+# Last Modified: 2024-Jul-12
 #-------------------------------------------------------------
 
 ###############       Shellcheck directives      #############
@@ -1195,10 +1195,18 @@ Generate_LastXResults(){
 	mv /tmp/ntp-lastx.csv "$SCRIPT_STORAGE_DIR/lastx.csv"
 }
 
-Reset_DB(){
+##----------------------------------------##
+## Modified by Martinski W. [2024-Jul-12] ##
+##----------------------------------------##
+# [Ported code over from "connmon" script] #
+Reset_DB()
+{
 	SIZEAVAIL="$(df -P -k "$SCRIPT_STORAGE_DIR" | awk '{print $4}' | tail -n 1)"
 	SIZEDB="$(ls -l "$SCRIPT_STORAGE_DIR/ntpdstats.db" | awk '{print $5}')"
-	if [ "$SIZEDB" -gt "$((SIZEAVAIL*1024))" ]; then
+	SIZEAVAIL="$(echo "$SIZEAVAIL" | awk '{printf("%s", $1 * 1024);}')"
+
+	if [ "$(echo "$SIZEAVAIL $SIZEDB" | awk -F ' ' '{print ($1 < $2)}')" -eq 1 ]
+	then
 		Print_Output true "Database size exceeds available space. $(ls -lh "$SCRIPT_STORAGE_DIR/ntpdstats.db" | awk '{print $5}')B is required to create backup." "$ERR"
 		return 1
 	else
