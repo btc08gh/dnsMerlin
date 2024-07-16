@@ -13,7 +13,7 @@
 ##           https://github.com/jackyaz/ntpMerlin           ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2024-Jul-12
+# Last Modified: 2024-Jul-15
 #-------------------------------------------------------------
 
 ###############       Shellcheck directives      #############
@@ -39,7 +39,7 @@ readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME_LOWER"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
-[ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
+[ -z "$(nvram get odmpid)" ] && ROUTER_MODEL="$(nvram get productid)" || ROUTER_MODEL="$(nvram get odmpid)"
 [ -f /opt/bin/sqlite3 ] && SQLITE3_PATH=/opt/bin/sqlite3 || SQLITE3_PATH=/usr/sbin/sqlite3
 ### End of script variables ###
 
@@ -771,7 +771,8 @@ TimeServer_Customise(){
 	"/opt/etc/init.d/S77$TIMESERVER_NAME" start >/dev/null 2>&1
 }
 
-ScriptStorageLocation(){
+ScriptStorageLocation()
+{
 	case "$1" in
 		usb)
 			TIMESERVER_NAME="$(TimeServer check)"
@@ -781,6 +782,7 @@ ScriptStorageLocation(){
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/config" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/config.bak" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntpstatstext.js" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/lastx.csv" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntpdstats.db" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntp.conf" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntp.conf.default" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
@@ -800,6 +802,7 @@ ScriptStorageLocation(){
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/config" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/config.bak" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/ntpstatstext.js" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME_LOWER.d/lastx.csv" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/ntpdstats.db" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/ntp.conf" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/ntp.conf.default" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
@@ -962,14 +965,25 @@ LastXResults(){
 	esac
 }
 
-WriteStats_ToJS(){
+##----------------------------------------##
+## Modified by Martinski W. [2024-Jul-15] ##
+##----------------------------------------##
+WriteStats_ToJS()
+{
+	if [ $# -lt 4 ] ; then return 1 ; fi
+
 	echo "function $3(){" > "$2"
 	html='document.getElementById("'"$4"'").innerHTML="'
-	while IFS='' read -r line || [ -n "$line" ]; do
-		html="${html}${line}\\r\\n"
+
+	while IFS='' read -r line || [ -n "$line" ]
+	do html="${html}${line}\r\n"
 	done < "$1"
 	html="$html"'"'
-	printf "%s\\r\\n}\\r\\n" "$html" >> "$2"
+
+	if [ $# -lt 5 ] || [ -z "$5" ]
+	then printf "%s\r\n}\r\n" "$html" >> "$2"
+	else printf "%s;\r\n%s\r\n}\r\n" "$html" "$5" >> "$2"
+	fi
 }
 
 #$1 fieldname $2 tablename $3 frequency (hours) $4 length (days) $5 outputfile $6 outputfrequency $7 sqlfile $8 timestamp
@@ -1146,7 +1160,6 @@ Generate_CSVs(){
 	done
 	
 	rm -f /tmp/ntp-stats.sql
-	
 	Generate_LastXResults
 	
 	{
@@ -1196,7 +1209,7 @@ Generate_LastXResults(){
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2024-Jul-12] ##
+## Modified by Martinski W. [2024-Jul-15] ##
 ##----------------------------------------##
 # [Ported code over from "connmon" script] #
 Reset_DB()
@@ -1214,12 +1227,31 @@ Reset_DB()
 		if ! cp -a "$SCRIPT_STORAGE_DIR/ntpdstats.db" "$SCRIPT_STORAGE_DIR/ntpdstats.db.bak"; then
 			Print_Output true "Database backup failed, please check storage device" "$WARN"
 		fi
-		
+
+		Print_Output false "Please wait..." "$PASS"
 		echo "DELETE FROM [ntpstats];" > /tmp/ntpmerlin-stats.sql
 		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntpmerlin-stats.sql
 		rm -f /tmp/ntpmerlin-stats.sql
-		
+
+		## Clear/Reset all CSV files ##
+		Generate_CSVs
+
+		## Show "reset" messages on webGUI ##
+		timeDateNow="$(/bin/date +"%c")"
+		extraJScode='databaseResetDone += 1;'
+		echo "Resetting stats: $timeDateNow" > /tmp/ntpstatstitle.txt
+		WriteStats_ToJS /tmp/ntpstatstitle.txt "$SCRIPT_STORAGE_DIR/ntpstatstext.js" SetNTPDStatsTitle statstitle "$extraJScode"
+		rm -f /tmp/ntpstatstitle.txt
+		sleep 2
 		Print_Output true "Database reset complete" "$WARN"
+		{
+		   sleep 4
+		   timeDateNow="$(/bin/date +"%c")"
+		   extraJScode='databaseResetDone = 0;'
+		   echo "Stats were reset: $timeDateNow" > /tmp/ntpstatstitle.txt
+		   WriteStats_ToJS /tmp/ntpstatstitle.txt "$SCRIPT_STORAGE_DIR/ntpstatstext.js" SetNTPDStatsTitle statstitle "$extraJScode"
+		   rm -f /tmp/ntpstatstitle.txt
+		} &
 	fi
 }
 
@@ -1239,7 +1271,11 @@ Shortcut_Script(){
 	esac
 }
 
-Process_Upgrade(){
+##----------------------------------------##
+## Modified by Martinski W. [2024-Jul-15] ##
+##----------------------------------------##
+Process_Upgrade()
+{
 	rm -f "$SCRIPT_STORAGE_DIR/.tableupgraded"
 	if [ ! -f "$SCRIPT_STORAGE_DIR/.chronyugraded" ]; then
 		if [ "$(TimeServer check)" = "chronyd" ]; then
@@ -1273,6 +1309,10 @@ Process_Upgrade(){
 	fi
 	if [ ! -f "$SCRIPT_STORAGE_DIR/lastx.csv" ]; then
 		Generate_LastXResults
+	fi
+	if [ ! -f "$SCRIPT_STORAGE_DIR/ntpstatstext.js" ]; then
+		echo "Stats last updated: Not yet updated" > /tmp/ntpstatstitle.txt
+		WriteStats_ToJS /tmp/ntpstatstitle.txt "$SCRIPT_STORAGE_DIR/ntpstatstext.js" SetNTPDStatsTitle statstitle 
 	fi
 }
 
@@ -1591,8 +1631,10 @@ Menu_Install(){
 	MainMenu
 }
 
-Menu_Startup(){
-	if [ -z "$1" ]; then
+Menu_Startup()
+{
+	if [ $# -eq 0 ] || [ -z "$1" ]
+	then
 		Print_Output true "Missing argument for startup, not starting $SCRIPT_NAME" "$WARN"
 		exit 1
 	elif [ "$1" != "force" ]; then
@@ -1839,7 +1881,8 @@ fi
 
 CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
 
-if [ -z "$1" ]; then
+if [ $# -eq 0 ] || [ -z "$1" ]
+then
 	NTP_Ready
 	Entware_Ready
 	if [ ! -f /opt/bin/sqlite3 ]; then
@@ -1847,7 +1890,7 @@ if [ -z "$1" ]; then
 		opkg update
 		opkg install sqlite3-cli
 	fi
-	
+
 	Create_Dirs
 	Conf_Exists
 	ScriptStorageLocation load

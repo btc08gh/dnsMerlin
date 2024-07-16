@@ -507,7 +507,7 @@ function initial(){
 	$j('#sortTableContainer').append(BuildLastXTableNoData());
 	get_conf_file();
 	d3.csv('/ext/ntpmerlin/csv/CompleteResults.htm').then(function(data){ParseCSVExport(data);}).catch(function(){ErrorCSVExport();});
-	$j('#Time_Format').val(GetCookie('Time_Format','number'));
+	$j('#Time_Format').val(GetCookie('Time_Format', 'number'));
 	ScriptUpdateLayout();
 	get_statstitle_file();
 	RedrawAllCharts();
@@ -704,7 +704,7 @@ function update_ntpstats(){
 
 function PostNTPUpdate(){
 	currentNoCharts = 0;
-	$j('#Time_Format').val(GetCookie('Time_Format','number'));
+	$j('#Time_Format').val(GetCookie('Time_Format', 'number'));
 	get_statstitle_file();
 	setTimeout(RedrawAllCharts,3000);
 }
@@ -762,16 +762,29 @@ function get_conf_file(){
 	});
 }
 
-
-function get_statstitle_file(){
+/**----------------------------------------**/
+/** Modified by Martinski W. [2024-Jul-15] **/
+/**----------------------------------------**/
+let databaseResetDone = 0;
+function get_statstitle_file()
+{
 	$j.ajax({
 		url: '/ext/ntpmerlin/ntpstatstext.js',
 		dataType: 'script',
 		error: function(xhr){
-			setTimeout(get_statstitle_file,1000);
+			setTimeout(get_statstitle_file, 2000);
 		},
-		success: function(){
+		success: function()
+		{
 			SetNTPDStatsTitle();
+			if (databaseResetDone === 1)
+			{
+				currentNoCharts = 0;
+				$j('#Time_Format').val(GetCookie('Time_Format', 'number'));
+				RedrawAllCharts();
+				databaseResetDone += 1;
+			}
+			setTimeout(get_statstitle_file, 4000);
 		}
 	});
 }
