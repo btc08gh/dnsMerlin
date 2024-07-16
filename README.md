@@ -3,7 +3,7 @@
 ![Shellcheck](https://github.com/jackyaz/ntpmerlin/actions/workflows/shellcheck.yml/badge.svg)
 
 ## v3.4.6
-### Updated on 2024-July-03
+### Updated on 2024-July-15
 ## About
 ntpMerlin implements an NTP time server for AsusWRT Merlin with charts for daily, weekly and monthly summaries of performance. A choice between ntpd and chrony is available.
 
