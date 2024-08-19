@@ -1,4 +1,3 @@
-var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
 
 var arraysortlistlines = [];
 var sortname = 'Time';
@@ -29,26 +28,26 @@ var backgroundcolourlist = ['rgba(252,133,0,0.5)','rgba(255,255,255,0.5)'];
 
 function keyHandler(e){
 	if(e.keyCode == 82){
-		$j(document).off('keydown');
+		$(document).off('keydown');
 		ResetZoom();
 	}
 	else if(e.keyCode == 68){
-		$j(document).off('keydown');
+		$(document).off('keydown');
 		ToggleDragZoom(document.form.btnDragZoom);
 	}
 	else if(e.keyCode == 70){
-		$j(document).off('keydown');
+		$(document).off('keydown');
 		ToggleFill();
 	}
 	else if(e.keyCode == 76){
-		$j(document).off('keydown');
+		$(document).off('keydown');
 		ToggleLines();
 	}
 }
 
-$j(document).keydown(function(e){keyHandler(e);});
-$j(document).keyup(function(e){
-	$j(document).keydown(function(e){
+$(document).keydown(function(e){keyHandler(e);});
+$(document).keyup(function(e){
+	$(document).keydown(function(e){
 		keyHandler(e);
 	});
 });
@@ -69,10 +68,10 @@ function Draw_Chart_NoData(txtchartname,texttodisplay){
 }
 
 function Draw_Chart(txtchartname,txttitle,txtunity,bordercolourname,backgroundcolourname){
-	var chartperiod = getChartPeriod($j('#'+txtchartname+'_Period option:selected').val());
-	var chartinterval = getChartInterval($j('#' + txtchartname + '_Interval option:selected').val());
-	var txtunitx = timeunitlist[$j('#'+txtchartname+'_Period option:selected').val()];
-	var numunitx = intervallist[$j('#'+txtchartname+'_Period option:selected').val()];
+	var chartperiod = getChartPeriod($('#'+txtchartname+'_Period option:selected').val());
+	var chartinterval = getChartInterval($('#' + txtchartname + '_Interval option:selected').val());
+	var txtunitx = timeunitlist[$('#'+txtchartname+'_Period option:selected').val()];
+	var numunitx = intervallist[$('#'+txtchartname+'_Period option:selected').val()];
 	var zoompanxaxismax = moment();
 	var chartxaxismax = null;
 	var chartxaxismin = moment().subtract(numunitx,txtunitx+'s');
@@ -86,8 +85,8 @@ function Draw_Chart(txtchartname,txttitle,txtunity,bordercolourname,backgroundco
 	var chartData = dataobject.map(function(d){return {x: d.Time,y: d.Value}});
 	var objchartname = window['LineChart_'+txtchartname];
 	
-	var timeaxisformat = getTimeFormat($j('#Time_Format option:selected').val(),'axis');
-	var timetooltipformat = getTimeFormat($j('#Time_Format option:selected').val(),'tooltip');
+	var timeaxisformat = getTimeFormat($('#Time_Format option:selected').val(),'axis');
+	var timetooltipformat = getTimeFormat($('#Time_Format option:selected').val(),'tooltip');
 	
 	if(chartinterval == 'day'){
 		charttype = 'bar';
@@ -381,9 +380,9 @@ function SetGlobalDataset(txtchartname,dataobject){
 		showhide('ntpupdate_text',false);
 		showhide('btnUpdateStats',true);
 		for(var i = 0; i < metriclist.length; i++){
-			$j('#'+metriclist[i]+'_Interval').val(GetCookie(metriclist[i]+'_Interval','number'));
+			$('#'+metriclist[i]+'_Interval').val(GetCookie(metriclist[i]+'_Interval','number'));
 			changePeriod(document.getElementById(metriclist[i]+'_Interval'));
-			$j('#'+metriclist[i]+'_Period').val(GetCookie(metriclist[i]+'_Period','number'));
+			$('#'+metriclist[i]+'_Period').val(GetCookie(metriclist[i]+'_Period','number'));
 			Draw_Chart(metriclist[i],metriclist[i],measureunitlist[i],bordercolourlist[i],backgroundcolourlist[i]);
 		}
 		AddEventHandlers();
@@ -444,31 +443,31 @@ function SetCookie(cookiename,cookievalue){
 }
 
 function AddEventHandlers(){
-	$j('.collapsible-jquery').off('click').on('click',function(){
-		$j(this).siblings().toggle('fast',function(){
-			if($j(this).css('display') == 'none'){
-				SetCookie($j(this).siblings()[0].id,'collapsed');
+	$('.collapsible-jquery').off('click').on('click',function(){
+		$(this).siblings().toggle('fast',function(){
+			if($(this).css('display') == 'none'){
+				SetCookie($(this).siblings()[0].id,'collapsed');
 			}
 			else{
-				SetCookie($j(this).siblings()[0].id,'expanded');
+				SetCookie($(this).siblings()[0].id,'expanded');
 			}
 		})
 	});
 	
-	$j('.collapsible-jquery').each(function(index,element){
-		if(GetCookie($j(this)[0].id,'string') == 'collapsed'){
-			$j(this).siblings().toggle(false);
+	$('.collapsible-jquery').each(function(index,element){
+		if(GetCookie($(this)[0].id,'string') == 'collapsed'){
+			$(this).siblings().toggle(false);
 		}
 		else{
-			$j(this).siblings().toggle(true);
+			$(this).siblings().toggle(true);
 		}
 	});
 }
 
-$j.fn.serializeObject = function(){
+$.fn.serializeObject = function(){
 	var o = custom_settings;
 	var a = this.serializeArray();
-	$j.each(a,function(){
+	$.each(a,function(){
 		if(o[this.name] !== undefined && this.name.indexOf('ntpmerlin') != -1 && this.name.indexOf('version') == -1){
 			if(!o[this.name].push){
 				o[this.name] = [o[this.name]];
@@ -503,11 +502,11 @@ function initial(){
 	SetCurrentPage();
 	LoadCustomSettings();
 	show_menu();
-	$j('#sortTableContainer').empty();
-	$j('#sortTableContainer').append(BuildLastXTableNoData());
+	$('#sortTableContainer').empty();
+	$('#sortTableContainer').append(BuildLastXTableNoData());
 	get_conf_file();
 	d3.csv('/ext/ntpmerlin/csv/CompleteResults.htm').then(function(data){ParseCSVExport(data);}).catch(function(){ErrorCSVExport();});
-	$j('#Time_Format').val(GetCookie('Time_Format', 'number'));
+	$('#Time_Format').val(GetCookie('Time_Format', 'number'));
 	ScriptUpdateLayout();
 	get_statstitle_file();
 	RedrawAllCharts();
@@ -516,10 +515,10 @@ function initial(){
 function ScriptUpdateLayout(){
 	var localver = GetVersionNumber('local');
 	var serverver = GetVersionNumber('server');
-	$j('#ntpmerlin_version_local').text(localver);
+	$('#ntpmerlin_version_local').text(localver);
 	
 	if(localver != serverver && serverver != 'N/A'){
-		$j('#ntpmerlin_version_server').text('Updated version available: '+serverver);
+		$('#ntpmerlin_version_server').text('Updated version available: '+serverver);
 		showhide('btnChkUpdate',false);
 		showhide('ntpmerlin_version_server',true);
 		showhide('btnDoUpdate',true);
@@ -535,11 +534,11 @@ function Validate_Number_Setting(forminput,upperlimit,lowerlimit){
 	var inputvalue = forminput.value*1;
 	
 	if(inputvalue > upperlimit || inputvalue < lowerlimit){
-		$j(forminput).addClass('invalid');
+		$(forminput).addClass('invalid');
 		return false;
 	}
 	else{
-		$j(forminput).removeClass('invalid');
+		$(forminput).removeClass('invalid');
 		return true;
 	}
 }
@@ -591,10 +590,10 @@ function changePeriod(e){
 	value = e.value * 1;
 	name = e.id.substring(0,e.id.indexOf('_'));
 	if(value == 2){
-		$j('select[id="'+name+'_Period"] option:contains(24)').text('Today');
+		$('select[id="'+name+'_Period"] option:contains(24)').text('Today');
 	}
 	else{
-		$j('select[id="'+name+'_Period"] option:contains("Today")').text('Last 24 hours');
+		$('select[id="'+name+'_Period"] option:contains("Today")').text('Last 24 hours');
 	}
 }
 
@@ -636,7 +635,7 @@ function ToggleDragZoom(button){
 }
 
 function update_status(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/ntpmerlin/detect_update.js',
 		dataType: 'script',
 		error:	function(xhr){
@@ -650,12 +649,12 @@ function update_status(){
 				document.getElementById('imgChkUpdate').style.display = 'none';
 				showhide('ntpmerlin_version_server',true);
 				if(updatestatus != 'None'){
-					$j('#ntpmerlin_version_server').text('Updated version available: '+updatestatus);
+					$('#ntpmerlin_version_server').text('Updated version available: '+updatestatus);
 					showhide('btnChkUpdate',false);
 					showhide('btnDoUpdate',true);
 				}
 				else{
-					$j('#ntpmerlin_version_server').text('No update available');
+					$('#ntpmerlin_version_server').text('No update available');
 					showhide('btnChkUpdate',true);
 					showhide('btnDoUpdate',false);
 				}
@@ -680,7 +679,7 @@ function DoUpdate(){
 }
 
 function update_ntpstats(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/ntpmerlin/detect_ntpmerlin.js',
 		dataType: 'script',
 		error: function(xhr){
@@ -704,7 +703,7 @@ function update_ntpstats(){
 
 function PostNTPUpdate(){
 	currentNoCharts = 0;
-	$j('#Time_Format').val(GetCookie('Time_Format', 'number'));
+	$('#Time_Format').val(GetCookie('Time_Format', 'number'));
 	get_statstitle_file();
 	setTimeout(RedrawAllCharts,3000);
 }
@@ -720,7 +719,7 @@ function UpdateStats(){
 }
 
 function SaveConfig(){
-	document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject())
+	document.getElementById('amng_custom').value = JSON.stringify($('form').serializeObject())
 	document.form.action_script.value = 'start_ntpmerlinconfig';
 	document.form.action_wait.value = 10;
 	showLoading();
@@ -745,7 +744,7 @@ function GetVersionNumber(versiontype){
 }
 
 function get_conf_file(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/ntpmerlin/config.htm',
 		dataType: 'text',
 		error: function(xhr){
@@ -768,7 +767,7 @@ function get_conf_file(){
 let databaseResetDone = 0;
 function get_statstitle_file()
 {
-	$j.ajax({
+	$.ajax({
 		url: '/ext/ntpmerlin/ntpstatstext.js',
 		dataType: 'script',
 		error: function(xhr){
@@ -780,7 +779,7 @@ function get_statstitle_file()
 			if (databaseResetDone === 1)
 			{
 				currentNoCharts = 0;
-				$j('#Time_Format').val(GetCookie('Time_Format', 'number'));
+				$('#Time_Format').val(GetCookie('Time_Format', 'number'));
 				RedrawAllCharts();
 				databaseResetDone += 1;
 			}
@@ -790,7 +789,7 @@ function get_statstitle_file()
 }
 
 function get_lastx_file(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/ntpmerlin/lastx.htm',
 		dataType: 'text',
 		error: function(xhr){
@@ -875,10 +874,10 @@ function SortTable(sorttext){
 		}
 	}
 	
-	$j('#sortTableContainer').empty();
-	$j('#sortTableContainer').append(BuildLastXTable());
+	$('#sortTableContainer').empty();
+	$('#sortTableContainer').append(BuildLastXTable());
 	
-	$j('.sortable').each(function(index,element){
+	$('.sortable').each(function(index,element){
 		if(element.innerHTML.replace(/ \(.*\)/,'').replace(' ','') == sortname){
 			if(sortdir == 'asc'){
 				element.innerHTML = element.innerHTML+' ↑';
