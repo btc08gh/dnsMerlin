@@ -26,7 +26,16 @@ var intervallist = [24,7,30];
 var bordercolourlist = ['#fc8500','#ffffff'];
 var backgroundcolourlist = ['rgba(252,133,0,0.5)','rgba(255,255,255,0.5)'];
 
-function keyHandler(e){
+/**----------------------------------------**/
+/** Modified by Martinski W. [2025-Feb-20] **/
+/**----------------------------------------**/
+let databaseResetDone = 0;
+var sqlDatabaseFileSize = '0 Bytes';
+var jffsAvailableSpaceStr = '0 Bytes';
+var jffsAvailableSpaceLow = 'OK';
+
+function keyHandler(e)
+{
 	if(e.keyCode == 82){
 		$(document).off('keydown');
 		ResetZoom();
@@ -52,7 +61,8 @@ $(document).keyup(function(e){
 	});
 });
 
-function Draw_Chart_NoData(txtchartname,texttodisplay){
+function Draw_Chart_NoData(txtchartname,texttodisplay)
+{
 	document.getElementById('divLineChart_'+txtchartname).width='730';
 	document.getElementById('divLineChart_'+txtchartname).height='500';
 	document.getElementById('divLineChart_'+txtchartname).style.width='730px';
@@ -67,7 +77,8 @@ function Draw_Chart_NoData(txtchartname,texttodisplay){
 	ctx.restore();
 }
 
-function Draw_Chart(txtchartname,txttitle,txtunity,bordercolourname,backgroundcolourname){
+function Draw_Chart(txtchartname,txttitle,txtunity,bordercolourname,backgroundcolourname)
+{
 	var chartperiod = getChartPeriod($('#'+txtchartname+'_Period option:selected').val());
 	var chartinterval = getChartInterval($('#' + txtchartname + '_Interval option:selected').val());
 	var txtunitx = timeunitlist[$('#'+txtchartname+'_Period option:selected').val()];
@@ -360,7 +371,8 @@ function ToggleFill(){
 	}
 }
 
-function RedrawAllCharts(){
+function redrawAllCharts()
+{
 	for(var i = 0; i < metriclist.length; i++){
 		Draw_Chart_NoData(metriclist[i],'Data loading...');
 		for(var i2 = 0; i2 < chartlist.length; i2++){
@@ -371,15 +383,22 @@ function RedrawAllCharts(){
 	}
 }
 
-function SetGlobalDataset(txtchartname,dataobject){
+/**----------------------------------------**/
+/** Modified by Martinski W. [2025-Feb-02] **/
+/**----------------------------------------**/
+function SetGlobalDataset(txtchartname,dataobject)
+{
 	window[txtchartname] = dataobject;
 	currentNoCharts++;
-	if(currentNoCharts == maxNoCharts){
+	if (currentNoCharts == maxNoCharts)
+	{
 		document.getElementById('ntpupdate_text').innerHTML = '';
 		showhide('imgNTPUpdate',false);
 		showhide('ntpupdate_text',false);
 		showhide('btnUpdateStats',true);
-		for(var i = 0; i < metriclist.length; i++){
+		showhide('databaseSize_text',true);
+		for (var i = 0; i < metriclist.length; i++)
+		{
 			$('#'+metriclist[i]+'_Interval').val(GetCookie(metriclist[i]+'_Interval','number'));
 			changePeriod(document.getElementById(metriclist[i]+'_Interval'));
 			$('#'+metriclist[i]+'_Period').val(GetCookie(metriclist[i]+'_Period','number'));
@@ -390,7 +409,8 @@ function SetGlobalDataset(txtchartname,dataobject){
 	}
 }
 
-function getTimeFormat(value,format){
+function getTimeFormat(value,format)
+{
 	var timeformat;
 	
 	if(format == 'axis'){
@@ -480,7 +500,7 @@ $.fn.serializeObject = function(){
 	return o;
 };
 
-function SetCurrentPage(){
+function setCurrentPage(){
 	document.form.next_page.value = window.location.pathname.substring(1);
 	document.form.current_page.value = window.location.pathname.substring(1);
 }
@@ -489,7 +509,8 @@ function ErrorCSVExport(){
 	document.getElementById('aExport').href='javascript:alert(\'Error exporting CSV,please refresh the page and try again\')';
 }
 
-function ParseCSVExport(data){
+function ParseCSVExport(data)
+{
 	var csvContent = 'Timestamp,Offset,Frequency,Sys_Jitter,Clk_Jitter,Clk_Wander,Rootdisp\n';
 	for(var i = 0; i < data.length; i++){
 		var dataString = data[i].Timestamp+','+data[i].Offset+','+data[i].Frequency+','+data[i].Sys_Jitter+','+data[i].Clk_Jitter+','+data[i].Clk_Wander+','+data[i].Rootdisp;
@@ -498,26 +519,37 @@ function ParseCSVExport(data){
 	document.getElementById('aExport').href='data:text/csv;charset=utf-8,'+encodeURIComponent(csvContent);
 }
 
-function initial(){
-	SetCurrentPage();
-	LoadCustomSettings();
+/**----------------------------------------**/
+/** Modified by Martinski W. [2025-Feb-15] **/
+/**----------------------------------------**/
+function initial()
+{
+	setCurrentPage();
+	loadCustomSettings();
 	show_menu();
 	$('#sortTableContainer').empty();
 	$('#sortTableContainer').append(BuildLastXTableNoData());
-	get_conf_file();
+	getConfigFile();
 	d3.csv('/ext/ntpmerlin/csv/CompleteResults.htm').then(function(data){ParseCSVExport(data);}).catch(function(){ErrorCSVExport();});
 	$('#Time_Format').val(GetCookie('Time_Format', 'number'));
-	ScriptUpdateLayout();
-	get_statstitle_file();
-	RedrawAllCharts();
+	scriptUpdateLayout();
+	getStatsTitleFile();
+	showhide('databaseSize_text',true);
+	showhide('jffsFreeSpace_text',true);
+	showhide('jffsFreeSpace_LOW',false);
+	showhide('jffsFreeSpace_WARN',false);
+	showhide('jffsFreeSpace_NOTE',false);
+	redrawAllCharts();
 }
 
-function ScriptUpdateLayout(){
+function scriptUpdateLayout()
+{
 	var localver = GetVersionNumber('local');
 	var serverver = GetVersionNumber('server');
 	$('#ntpmerlin_version_local').text(localver);
 	
-	if(localver != serverver && serverver != 'N/A'){
+	if (localver != serverver && serverver != 'N/A')
+	{
 		$('#ntpmerlin_version_server').text('Updated version available: '+serverver);
 		showhide('btnChkUpdate',false);
 		showhide('ntpmerlin_version_server',true);
@@ -529,45 +561,68 @@ function reload(){
 	location.reload(true);
 }
 
-function Validate_Number_Setting(forminput,upperlimit,lowerlimit){
+function validateNumberSetting (forminput, upperlimit, lowerlimit)
+{
 	var inputname = forminput.name;
 	var inputvalue = forminput.value*1;
 	
-	if(inputvalue > upperlimit || inputvalue < lowerlimit){
+	if (inputvalue > upperlimit || inputvalue < lowerlimit)
+	{
 		$(forminput).addClass('invalid');
 		return false;
 	}
-	else{
+	else
+	{
 		$(forminput).removeClass('invalid');
 		return true;
 	}
 }
 
-function Format_Number_Setting(forminput){
+function formatNumberSetting (forminput)
+{
 	var inputname = forminput.name;
 	var inputvalue = forminput.value*1;
 	
-	if(forminput.value.length == 0 || inputvalue == NaN){
+	if (forminput.value.length == 0 || inputvalue == NaN)
+	{
 		return false;
 	}
-	else{
+	else
+	{
 		forminput.value = parseInt(forminput.value);
 		return true;
 	}
 }
 
-function Validate_All(){
+/**----------------------------------------**/
+/** Modified by Martinski W. [2025-Feb-08] **/
+/**----------------------------------------**/
+//Between 15 and 365 days, Default: 30//
+const theDaysToKeepMIN = 15;
+const theDaysToKeepDEF = 30;
+const theDaysToKeepMAX = 365;
+const theDaysToKeepTXT = `(between ${theDaysToKeepMIN} and ${theDaysToKeepMAX}, default: ${theDaysToKeepDEF})`;
+
+//Between 5 and 100 results, Default: 10//
+const theLastXResultsMIN = 5;
+const theLastXResultsDEF = 10;
+const theLastXResultsMAX = 100;
+const theLastXResultsTXT = `(between ${theLastXResultsMIN} and ${theLastXResultsMAX}, default: ${theLastXResultsDEF})`;
+
+function validateAll()
+{
 	var validationfailed = false;
-	if(! Validate_Number_Setting(document.form.ntpmerlin_lastxresults,100,10)){validationfailed=true;}
-	if(! Validate_Number_Setting(document.form.ntpmerlin_daystokeep,365,30)){validationfailed=true;}
-	
-	if(validationfailed){
-		alert('Validation for some fields failed. Please correct invalid values and try again.');
+	if (!validateNumberSetting (document.form.ntpmerlin_lastxresults, theLastXResultsMAX, theLastXResultsMIN))
+	{ validationfailed = true; }
+	if (!validateNumberSetting (document.form.ntpmerlin_daystokeep, theDaysToKeepMAX, theDaysToKeepMIN))
+	{ validationfailed = true; }
+	if (validationfailed)
+	{
+		alert('**ERROR**\nValidation for some fields failed.\nPlease correct invalid values and try again.');
 		return false;
 	}
-	else{
-		return true;
-	}
+	else
+	{ return true; }
 }
 
 function getChartPeriod(period){
@@ -663,7 +718,8 @@ function update_status(){
 	});
 }
 
-function CheckUpdate(){
+function checkUpdate()
+{
 	showhide('btnChkUpdate',false);
 	document.formScriptActions.action_script.value = 'start_ntpmerlincheckupdate'
 	document.formScriptActions.submit();
@@ -671,14 +727,16 @@ function CheckUpdate(){
 	setTimeout(update_status,2000);
 }
 
-function DoUpdate(){
+function doUpdate()
+{
 	document.form.action_script.value = 'start_ntpmerlindoupdate';
 	document.form.action_wait.value = 10;
 	showLoading();
 	document.form.submit();
 }
 
-function update_ntpstats(){
+function update_ntpstats()
+{
 	$.ajax({
 		url: '/ext/ntpmerlin/detect_ntpmerlin.js',
 		dataType: 'script',
@@ -695,21 +753,27 @@ function update_ntpstats(){
 			}
 			else if(ntpstatus == 'Done'){
 				document.getElementById('ntpupdate_text').innerHTML = 'Refreshing charts...';
-				PostNTPUpdate();
+				postNTPUpdate();
 			}
 		}
 	});
 }
 
-function PostNTPUpdate(){
+function postNTPUpdate()
+{
 	currentNoCharts = 0;
 	$('#Time_Format').val(GetCookie('Time_Format', 'number'));
-	get_statstitle_file();
-	setTimeout(RedrawAllCharts,3000);
+	getStatsTitleFile();
+	setTimeout(redrawAllCharts,3000);
 }
 
-function UpdateStats(){
+/**----------------------------------------**/
+/** Modified by Martinski W. [2025-Feb-02] **/
+/**----------------------------------------**/
+function updateStats()
+{
 	showhide('btnUpdateStats',false);
+	showhide('databaseSize_text',false);
 	document.formScriptActions.action_script.value='start_ntpmerlin';
 	document.formScriptActions.submit();
 	document.getElementById('ntpupdate_text').innerHTML = 'Retrieving timeserver stats';
@@ -718,15 +782,23 @@ function UpdateStats(){
 	setTimeout(update_ntpstats,5000);
 }
 
-function SaveConfig(){
-	document.getElementById('amng_custom').value = JSON.stringify($('form').serializeObject())
-	document.form.action_script.value = 'start_ntpmerlinconfig';
-	document.form.action_wait.value = 10;
-	showLoading();
-	document.form.submit();
+/**----------------------------------------**/
+/** Modified by Martinski W. [2025-Feb-02] **/
+/**----------------------------------------**/
+function saveConfig()
+{
+	if (validateAll())
+	{
+		document.getElementById('amng_custom').value = JSON.stringify($('form').serializeObject())
+		document.form.action_script.value = 'start_ntpmerlinconfig';
+		document.form.action_wait.value = 10;
+		showLoading();
+		document.form.submit();
+	}
 }
 
-function GetVersionNumber(versiontype){
+function GetVersionNumber(versiontype)
+{
 	var versionprop;
 	if(versiontype == 'local'){
 		versionprop = custom_settings.ntpmerlin_version_local;
@@ -743,52 +815,90 @@ function GetVersionNumber(versiontype){
 	}
 }
 
-function get_conf_file(){
+/**----------------------------------------**/
+/** Modified by Martinski W. [2025-Feb-15] **/
+/**----------------------------------------**/
+function getConfigFile()
+{
 	$.ajax({
 		url: '/ext/ntpmerlin/config.htm',
 		dataType: 'text',
 		error: function(xhr){
-			setTimeout(get_conf_file,1000);
+			setTimeout(getConfigFile,1000);
 		},
-		success: function(data){
-			var configdata=data.split('\n');
+		success: function(data)
+		{
+			let settingname, settingvalue;
+			var configdata = data.split('\n');
 			configdata = configdata.filter(Boolean);
-			
-			for(var i = 0; i < configdata.length; i++){
-				eval('document.form.ntpmerlin_'+configdata[i].split('=')[0].toLowerCase()).value = configdata[i].split('=')[1].replace(/(\r\n|\n|\r)/gm,'');
+
+			for (var indx = 0; indx < configdata.length; indx++)
+			{
+				if (configdata[indx].length === 0 || configdata[indx].match('^[ ]*#') !== null)
+				{ continue; }  //Skip comments & empty lines//
+
+				settingname = configdata[indx].split('=')[0];
+				settingvalue = configdata[indx].split('=')[1].replace(/(\r\n|\n|\r)/gm,'');
+
+				if (settingname.match(/^JFFS_MSGLOGTIME/) != null)
+				{ continue; }  //Skip this config setting// 
+
+				settingname = settingname.toLowerCase();
+				eval('document.form.ntpmerlin_' + settingname).value = settingvalue;
 			}
+			document.getElementById('theDaysToKeepText').textContent = theDaysToKeepTXT;
+			document.getElementById('theLastXResultsText').textContent = theLastXResultsTXT;
 		}
 	});
 }
 
 /**----------------------------------------**/
-/** Modified by Martinski W. [2024-Jul-15] **/
+/** Modified by Martinski W. [2025-Feb-20] **/
 /**----------------------------------------**/
-let databaseResetDone = 0;
-function get_statstitle_file()
+function getStatsTitleFile()
 {
 	$.ajax({
 		url: '/ext/ntpmerlin/ntpstatstext.js',
 		dataType: 'script',
 		error: function(xhr){
-			setTimeout(get_statstitle_file, 2000);
+			setTimeout(getStatsTitleFile, 2000);
 		},
 		success: function()
 		{
 			SetNTPDStatsTitle();
+			document.getElementById('databaseSize_text').textContent = 'Database Size: '+sqlDatabaseFileSize;
+
+			if (jffsAvailableSpaceLow.match(/^WARNING[0-9]/) === null)
+			{
+				showhide('jffsFreeSpace_LOW',false);
+				showhide('jffsFreeSpace_NOTE',false);
+				showhide('jffsFreeSpace_WARN',false);
+				document.getElementById('jffsFreeSpace_text').textContent = 'JFFS Available: ' + jffsAvailableSpaceStr;
+			}
+			else
+			{
+				document.getElementById('jffsFreeSpace_text').textContent = 'JFFS Available: ';
+				document.getElementById('jffsFreeSpace_LOW').textContent = jffsAvailableSpaceStr;
+				showhide('jffsFreeSpace_LOW',true);
+				if (document.form.ntpmerlin_storagelocation.value === 'jffs')
+				{ showhide('jffsFreeSpace_NOTE',false); showhide('jffsFreeSpace_WARN',true); }
+				else
+				{ showhide('jffsFreeSpace_WARN',false); showhide('jffsFreeSpace_NOTE',true); }
+			}
 			if (databaseResetDone === 1)
 			{
 				currentNoCharts = 0;
 				$('#Time_Format').val(GetCookie('Time_Format', 'number'));
-				RedrawAllCharts();
+				redrawAllCharts();
 				databaseResetDone += 1;
 			}
-			setTimeout(get_statstitle_file, 4000);
+			setTimeout(getStatsTitleFile, 4000);
 		}
 	});
 }
 
-function get_lastx_file(){
+function get_lastx_file()
+{
 	$.ajax({
 		url: '/ext/ntpmerlin/lastx.htm',
 		dataType: 'text',
