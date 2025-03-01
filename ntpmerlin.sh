@@ -13,7 +13,7 @@
 ##           https://github.com/jackyaz/ntpMerlin           ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2025-Feb-20
+# Last Modified: 2025-Feb-28
 #-------------------------------------------------------------
 
 ###############       Shellcheck directives      #############
@@ -973,7 +973,7 @@ Get_WebUI_Page()
 ##----------------------------------------##
 Get_WebUI_URL()
 {
-	local urlPage=""  urlProto=""  urlDomain=""  urlPort=""
+	local urlPage  urlProto  urlDomain  urlPort  lanPort
 
 	if [ ! -f "$TEMP_MENU_TREE" ]
 	then
@@ -993,12 +993,13 @@ Get_WebUI_URL()
 	else
 		urlDomain="$(nvram get lan_ipaddr)"
 	fi
-	if [ "$(nvram get ${urlProto}_lanport)" -eq 80 ] || \
-	   [ "$(nvram get ${urlProto}_lanport)" -eq 443 ]
+
+	lanPort="$(nvram get ${urlProto}_lanport)"
+	if [ "$lanPort" -eq 80 ] || [ "$lanPort" -eq 443 ]
 	then
 		urlPort=""
 	else
-		urlPort=":$(nvram get ${urlProto}_lanport)"
+		urlPort=":$lanPort"
 	fi
 
 	if echo "$urlPage" | grep -qE "^${webPageFileRegExp}$" && \
@@ -1125,8 +1126,8 @@ ScriptStorageLocation()
 			TIMESERVER_NAME="$(TimeServer check)"
 			sed -i 's/^STORAGELOCATION.*$/STORAGELOCATION=usb/' "$SCRIPT_CONF"
 			mkdir -p "/opt/share/$SCRIPT_NAME_LOWER.d/"
-			rm -f "/jffs/addons/$SCRIPT_NAME.d/ntpdstats.db-shm"
-			rm -f "/jffs/addons/$SCRIPT_NAME.d/ntpdstats.db-wal"
+			rm -f "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntpdstats.db-shm"
+			rm -f "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntpdstats.db-wal"
 			mv -f "/jffs/addons/$SCRIPT_NAME_LOWER.d/csv" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv -f "/jffs/addons/$SCRIPT_NAME_LOWER.d/config" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv -f "/jffs/addons/$SCRIPT_NAME_LOWER.d/config.bak" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
@@ -1402,23 +1403,23 @@ WriteSql_ToFile()
 {
 	timenow="$8"
 	maxcount="$(echo "$3" "$4" | awk '{printf ((24*$2)/$1)}')"
-	
+
 	if ! echo "$5" | grep -q "day"
 	then
 		{
-			echo ".mode csv"
-			echo ".headers on"
-			echo ".output ${5}_${6}.htm"
-			echo "PRAGMA temp_store=1;"
-			echo "SELECT '$1' Metric,Min(strftime('%s',datetime(strftime('%Y-%m-%d %H:00:00',datetime([Timestamp],'unixepoch'))))) Time,IFNULL(printf('%f',Avg($1)),'NaN') Value FROM $2 WHERE ([Timestamp] >= strftime('%s',datetime($timenow,'unixepoch','-$maxcount hour'))) GROUP BY strftime('%m',datetime([Timestamp],'unixepoch')),strftime('%d',datetime([Timestamp],'unixepoch')),strftime('%H',datetime([Timestamp],'unixepoch')) ORDER BY [Timestamp] DESC;"
+		   echo ".mode csv"
+		   echo ".headers on"
+		   echo ".output ${5}_${6}.htm"
+		   echo "PRAGMA temp_store=1;"
+		   echo "SELECT '$1' Metric,Min(strftime('%s',datetime(strftime('%Y-%m-%d %H:00:00',datetime([Timestamp],'unixepoch'))))) Time,IFNULL(printf('%f',Avg($1)),'NaN') Value FROM $2 WHERE ([Timestamp] >= strftime('%s',datetime($timenow,'unixepoch','-$maxcount hour'))) GROUP BY strftime('%m',datetime([Timestamp],'unixepoch')),strftime('%d',datetime([Timestamp],'unixepoch')),strftime('%H',datetime([Timestamp],'unixepoch')) ORDER BY [Timestamp] DESC;"
 		} > "$7"
 	else
 		{
-			echo ".mode csv"
-			echo ".headers on"
-			echo ".output ${5}_${6}.htm"
-			echo "PRAGMA temp_store=1;"
-			echo "SELECT '$1' Metric,Max(strftime('%s',datetime([Timestamp],'unixepoch','localtime','start of day','utc'))) Time,IFNULL(printf('%f',Avg($1)),'NaN') Value FROM $2 WHERE ([Timestamp] > strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-$maxcount day'))) GROUP BY strftime('%m',datetime([Timestamp],'unixepoch','localtime')),strftime('%d',datetime([Timestamp],'unixepoch','localtime')) ORDER BY [Timestamp] DESC;"
+		   echo ".mode csv"
+		   echo ".headers on"
+		   echo ".output ${5}_${6}.htm"
+		   echo "PRAGMA temp_store=1;"
+		   echo "SELECT '$1' Metric,Max(strftime('%s',datetime([Timestamp],'unixepoch','localtime','start of day','utc'))) Time,IFNULL(printf('%f',Avg($1)),'NaN') Value FROM $2 WHERE ([Timestamp] > strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-$maxcount day'))) GROUP BY strftime('%m',datetime([Timestamp],'unixepoch','localtime')),strftime('%d',datetime([Timestamp],'unixepoch','localtime')) ORDER BY [Timestamp] DESC;"
 		} > "$7"
 	fi
 }
@@ -1710,7 +1711,7 @@ _JFFS_WarnLowFreeSpace_()
    fi
    jffsWarningLogTime="$(JFFS_WarningLogTime check)"
 
-   currTimeSecs="$(date '+%s')"
+   currTimeSecs="$(date +'%s')"
    currTimeDiff="$(echo "$currTimeSecs $jffsWarningLogTime" | awk -F ' ' '{printf("%s", $1 - $2);}')"
    if [ "$currTimeDiff" -ge "$jffsWarningLogFreq" ]
    then
@@ -2087,7 +2088,7 @@ Generate_LastXResults()
 	   echo "PRAGMA temp_store=1;"
 	   echo "SELECT [Timestamp],[Offset],[Frequency] FROM ntpstats ORDER BY [Timestamp] DESC LIMIT $(LastXResults check);"
 	} > /tmp/ntpMerlin-lastx.sql
-	_ApplyDatabaseSQLCmds_ /tmp/ntpMerlin-lastx.sql gls1
+	_ApplyDatabaseSQLCmds_ /tmp/ntpMerlin-lastx.sql glx1
 
 	rm -f /tmp/ntpMerlin-lastx.sql
 	sed -i 's/"//g' /tmp/ntpMerlin-lastx.csv
@@ -2287,17 +2288,16 @@ ScriptHeader()
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2025-Feb-20] ##
+## Modified by Martinski W. [2025-Feb-28] ##
 ##----------------------------------------##
 MainMenu()
 {
-	local menuOption  storageLocStr
+	local menuOption  storageLocStr  ntpRedirectStatus
 	local jffsFreeSpace  jffsFreeSpaceStr  jffsSpaceMsgTag
 
-	NTP_REDIRECT_ENABLED=""
 	if Auto_NAT check
-	then NTP_REDIRECT_ENABLED="ENABLED"
-	else NTP_REDIRECT_ENABLED="DISABLED"
+	then ntpRedirectStatus="${PassBGRNct} ENABLED ${CLRct}"
+	else ntpRedirectStatus="${CritIREDct} DISABLED ${CLRct}"
 	fi
 
 	TIMESERVER_NAME_MENU="$(TimeServer check)"
@@ -2327,7 +2327,7 @@ MainMenu()
 	printf "1.    Update timeserver stats now\n"
 	printf "      Database size: ${SETTING}%s${CLEARFORMAT}\n\n" "$(_GetFileSize_ "$NTPDSTATS_DB" HRx)"
 	printf "2.    Toggle redirect of all NTP traffic to %s\n" "$SCRIPT_NAME"
-    printf "      Currently: ${SETTING}%s${CLEARFORMAT}\n\n" "$NTP_REDIRECT_ENABLED"
+    printf "      Currently: ${ntpRedirectStatus}${CLEARFORMAT}\n\n"
 	printf "3.    Edit ${SETTING}%s${CLEARFORMAT} configuration file\n\n" "$(TimeServer check)"
 	printf "4.    Toggle time output mode\n"
     printf "      Currently: ${SETTING}%s${CLEARFORMAT} time values will be used for CSV exports\n\n" "$(OutputTimeMode check)"
@@ -2371,11 +2371,11 @@ MainMenu()
 				then
 					Auto_NAT delete
 					NTP_Redirect delete
-					printf "${BOLD}NTP Redirect has been disabled${CLEARFORMAT}\n\n"
+					printf "${BOLD}NTP Redirect has been ${REDct}DISABLED${CLEARFORMAT}\n\n"
 				else
 					Auto_NAT create
 					NTP_Redirect create
-					printf "${BOLD}NTP Redirect has been enabled${CLEARFORMAT}\n\n"
+					printf "${BOLD}NTP Redirect has been ${GRNct}ENABLED${CLEARFORMAT}\n\n"
 				fi
 				PressEnter
 				break
@@ -2836,17 +2836,30 @@ Menu_Uninstall()
 	Print_Output true "Uninstall completed" "$PASS"
 }
 
+##----------------------------------------##
+## Modified by Martinski W. [2025-Feb-28] ##
+##----------------------------------------##
 NTP_Ready()
 {
-	if [ "$(nvram get ntp_ready)" -eq 0 ]; then
+	local theSleepDelay=15  ntpMaxWaitSecs=600  ntpWaitSecs
+
+	if [ "$(nvram get ntp_ready)" -eq 0 ]
+	then
 		Check_Lock
-		ntpwaitcount=0
-		while [ "$(nvram get ntp_ready)" -eq 0 ] && [ "$ntpwaitcount" -lt 600 ]; do
-			ntpwaitcount="$((ntpwaitcount + 30))"
-			Print_Output true "Waiting for NTP to sync..." "$WARN"
-			sleep 30
+		ntpWaitSecs=0
+		Print_Output true "Waiting for NTP to sync..." "$WARN"
+
+		while [ "$(nvram get ntp_ready)" -eq 0 ] && [ "$ntpWaitSecs" -lt "$ntpMaxWaitSecs" ]
+		do
+			if [ "$ntpWaitSecs" -gt 0 ] && [ "$((ntpWaitSecs % 30))" -eq 0 ]
+			then
+			    Print_Output true "Waiting for NTP to sync [$ntpWaitSecs secs]..." "$WARN"
+			fi
+			sleep "$theSleepDelay"
+			ntpWaitSecs="$((ntpWaitSecs + theSleepDelay))"
 		done
-		if [ "$ntpwaitcount" -ge 600 ]; then
+		if [ "$ntpWaitSecs" -ge "$ntpMaxWaitSecs" ]
+		then
 			Print_Output true "NTP failed to sync after 10 minutes. Please resolve!" "$CRIT"
 			Clear_Lock
 			exit 1
@@ -2858,45 +2871,60 @@ NTP_Ready()
 }
 
 ### function based on @Adamm00's Skynet USB wait function ###
+##----------------------------------------##
+## Modified by Martinski W. [2025-Feb-28] ##
+##----------------------------------------##
 Entware_Ready()
 {
-	if [ ! -f /opt/bin/opkg ]; then
+	local theSleepDelay=5  maxSleepTimer=120  sleepTimerSecs
+
+	if [ ! -f /opt/bin/opkg ]
+	then
 		Check_Lock
-		sleepcount=1
-		while [ ! -f /opt/bin/opkg ] && [ "$sleepcount" -le 10 ]; do
-			Print_Output true "Entware not found, sleeping for 10s (attempt $sleepcount of 10)" "$ERR"
-			sleepcount="$((sleepcount + 1))"
-			sleep 10
+		sleepTimerSecs=0
+
+		while [ ! -f /opt/bin/opkg ] && [ "$sleepTimerSecs" -lt "$maxSleepTimer" ]
+		do
+			if [ "$((sleepTimerSecs % 10))" -eq 0 ]
+			then
+			    Print_Output true "Entware NOT found. Wait for Entware to be ready [$sleepTimerSecs secs]..." "$WARN"
+			fi
+			sleep "$theSleepDelay"
+			sleepTimerSecs="$((sleepTimerSecs + theSleepDelay))"
 		done
-		if [ ! -f /opt/bin/opkg ]; then
-			Print_Output true "Entware not found and is required for $SCRIPT_NAME to run, please resolve" "$CRIT"
+		if [ ! -f /opt/bin/opkg ]
+		then
+			Print_Output true "Entware NOT found and is required for $SCRIPT_NAME to run, please resolve!" "$CRIT"
 			Clear_Lock
 			exit 1
 		else
-			Print_Output true "Entware found, $SCRIPT_NAME will now continue" "$PASS"
+			Print_Output true "Entware found. $SCRIPT_NAME will now continue" "$PASS"
 			Clear_Lock
 		fi
 	fi
 }
-### ###
 
-Show_About(){
+### function based on @dave14305's FlexQoS about function ###
+Show_About()
+{
 	cat <<EOF
 About
   $SCRIPT_NAME implements an NTP time server for AsusWRT Merlin
   with charts for daily, weekly and monthly summaries of performance.
   A choice between ntpd and chrony is available.
+
 License
   $SCRIPT_NAME is free to use under the GNU General Public License
   version 3 (GPL-3.0) https://opensource.org/licenses/GPL-3.0
+
 Help & Support
   https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=22
+
 Source code
   https://github.com/jackyaz/$SCRIPT_NAME
 EOF
-	printf "\\n"
+	printf "\n"
 }
-### ###
 
 ### function based on @dave14305's FlexQoS show_help function ###
 Show_Help()
@@ -2917,7 +2945,6 @@ Available commands:
 EOF
 	printf "\n"
 }
-### ###
 
 ##-------------------------------------##
 ## Added by Martinski W. [2025-Jan-04] ##
