@@ -13,7 +13,7 @@
 ##           https://github.com/jackyaz/ntpMerlin           ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2025-Feb-28
+# Last Modified: 2025-Mar-01
 #-------------------------------------------------------------
 
 ###############       Shellcheck directives      #############
@@ -2726,9 +2726,10 @@ _RemoveMenuAddOnsSection_()
    local BEGINnum="$1"  ENDINnum="$2"
 
    if [ -n "$(sed -E "${BEGINnum},${ENDINnum}!d;/${webPageLineTabExp}/!d" "$TEMP_MENU_TREE")" ]
-   then return 0
+   then return 1
    fi
    sed -i "${BEGINnum},${ENDINnum}d" "$TEMP_MENU_TREE"
+   return 0
 }
 
 ##-------------------------------------##
@@ -2736,21 +2737,19 @@ _RemoveMenuAddOnsSection_()
 ##-------------------------------------##
 _FindandRemoveMenuAddOnsSection_()
 {
-   local BEGINnum  ENDINnum
+   local BEGINnum  ENDINnum  retCode=1
 
    if grep -qE "^${BEGIN_MenuAddOnsTag}$" "$TEMP_MENU_TREE" && \
       grep -qE "^${ENDIN_MenuAddOnsTag}$" "$TEMP_MENU_TREE"
    then
-       doWebGUIreset=true
        BEGINnum="$(grep -nE "^${BEGIN_MenuAddOnsTag}$" "$TEMP_MENU_TREE" | awk -F ':' '{print $1}')"
        ENDINnum="$(grep -nE "^${ENDIN_MenuAddOnsTag}$" "$TEMP_MENU_TREE" | awk -F ':' '{print $1}')"
-       _RemoveMenuAddOnsSection_ "$BEGINnum" "$ENDINnum"
+       _RemoveMenuAddOnsSection_ "$BEGINnum" "$ENDINnum" && retCode=0
    fi
 
    if grep -qE "^${webPageMenuAddons}$" "$TEMP_MENU_TREE" && \
       grep -qE "${webPageHelpSupprt}$" "$TEMP_MENU_TREE"
    then
-       doWebGUIreset=true
        BEGINnum="$(grep -nE "^${webPageMenuAddons}$" "$TEMP_MENU_TREE" | awk -F ':' '{print $1}')"
        ENDINnum="$(grep -nE "${webPageHelpSupprt}$" "$TEMP_MENU_TREE" | awk -F ':' '{print $1}')"
        if [ -n "$BEGINnum" ] && [ -n "$ENDINnum" ] && [ "$BEGINnum" -lt "$ENDINnum" ]
@@ -2759,11 +2758,11 @@ _FindandRemoveMenuAddOnsSection_()
            if [ "$(sed -n "${BEGINnum}p" "$TEMP_MENU_TREE")" = "," ] && \
               [ "$(sed -n "${ENDINnum}p" "$TEMP_MENU_TREE")" = "}" ]
            then
-               _RemoveMenuAddOnsSection_ "$BEGINnum" "$ENDINnum"
+               _RemoveMenuAddOnsSection_ "$BEGINnum" "$ENDINnum" && retCode=0
            fi
        fi
    fi
-   return 0
+   return "$retCode"
 }
 
 ##----------------------------------------##
