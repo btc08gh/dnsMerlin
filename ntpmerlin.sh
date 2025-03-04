@@ -13,7 +13,7 @@
 ##           https://github.com/jackyaz/ntpMerlin           ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2025-Mar-01
+# Last Modified: 2025-Mar-03
 #-------------------------------------------------------------
 
 ###############       Shellcheck directives      #############
@@ -25,6 +25,11 @@
 # shellcheck disable=SC2059
 # shellcheck disable=SC2086
 # shellcheck disable=SC2155
+# shellcheck disable=SC2174
+# shellcheck disable=SC3018
+# shellcheck disable=SC3037
+# shellcheck disable=SC3043
+# shellcheck disable=SC3045
 ##############################################################
 
 ### Start of script variables ###
@@ -2310,7 +2315,7 @@ MainMenu()
 
 	storageLocStr="$(ScriptStorageLocation check | tr 'a-z' 'A-Z')"
 
-	jffsFreeSpace="$(echo "$(_Get_JFFS_Space_ FREE HRx)" | sed 's/%/%%/')"
+	jffsFreeSpace="$(_Get_JFFS_Space_ FREE HRx | sed 's/%/%%/')"
 	if ! echo "$JFFS_LowFreeSpaceStatus" | grep -E "^WARNING[0-9]$"
 	then
 		jffsFreeSpaceStr="${SETTING}$jffsFreeSpace"
