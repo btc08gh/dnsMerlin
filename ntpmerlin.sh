@@ -13,7 +13,7 @@
 ##           https://github.com/jackyaz/ntpMerlin           ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2025-Mar-03
+# Last Modified: 2025-May-14
 #-------------------------------------------------------------
 
 ###############       Shellcheck directives      #############
@@ -36,6 +36,7 @@
 readonly SCRIPT_NAME="ntpMerlin"
 readonly SCRIPT_NAME_LOWER="$(echo "$SCRIPT_NAME" | tr 'A-Z' 'a-z' | sed 's/d//')"
 readonly SCRIPT_VERSION="v3.4.6"
+readonly SCRIPT_VERSTAG="25051412"
 SCRIPT_BRANCH="develop"
 SCRIPT_REPO="https://raw.githubusercontent.com/jackyaz/$SCRIPT_NAME/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME_LOWER.d"
@@ -60,6 +61,7 @@ readonly webPageLineTabExp="\{url: \"$webPageFileRegExp\", tabName: "
 readonly webPageLineRegExp="${webPageLineTabExp}\"$SCRIPT_NAME\"\},"
 readonly BEGIN_MenuAddOnsTag="/\*\*BEGIN:_AddOns_\*\*/"
 readonly ENDIN_MenuAddOnsTag="/\*\*ENDIN:_AddOns_\*\*/"
+readonly scriptVERINFO="[${SCRIPT_VERSION}_${SCRIPT_VERSTAG}, Branch: $SCRIPT_BRANCH]"
 
 # For daily CRON job to trim database #
 readonly defTrimDB_Hour=3
@@ -2615,7 +2617,7 @@ Menu_Install()
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2025-Feb-15] ##
+## Modified by Martinski W. [2025-May-14] ##
 ##----------------------------------------##
 Menu_Startup()
 {
@@ -2628,7 +2630,7 @@ Menu_Startup()
 			Print_Output true "$1 does NOT contain Entware, not starting $SCRIPT_NAME" "$CRIT"
 			exit 1
 		else
-			Print_Output true "$1 contains Entware, starting $SCRIPT_NAME" "$PASS"
+			Print_Output true "$1 contains Entware, $SCRIPT_NAME $SCRIPT_VERSION starting up" "$PASS"
 		fi
 	fi
 
@@ -2909,10 +2911,13 @@ Entware_Ready()
 }
 
 ### function based on @dave14305's FlexQoS about function ###
+##----------------------------------------##
+## Modified by Martinski W. [2025-May-14] ##
+##----------------------------------------##
 Show_About()
 {
 	cat <<EOF
-About
+About $SCRIPT_VERS_INFO
   $SCRIPT_NAME implements an NTP time server for AsusWRT Merlin
   with charts for daily, weekly and monthly summaries of performance.
   A choice between ntpd and chrony is available.
@@ -2931,9 +2936,13 @@ EOF
 }
 
 ### function based on @dave14305's FlexQoS show_help function ###
+##----------------------------------------##
+## Modified by Martinski W. [2025-May-14] ##
+##----------------------------------------##
 Show_Help()
 {
 	cat <<EOF
+HELP $SCRIPT_VERS_INFO
 Available commands:
   $SCRIPT_NAME_LOWER about            explains functionality
   $SCRIPT_NAME_LOWER update           checks for updates
@@ -2966,6 +2975,11 @@ SCRIPT_CONF="$SCRIPT_STORAGE_DIR/config"
 NTPDSTATS_DB="$SCRIPT_STORAGE_DIR/ntpdstats.db"
 CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
 JFFS_LowFreeSpaceStatus="OK"
+
+if [ "$SCRIPT_BRANCH" != "develop" ]
+then SCRIPT_VERS_INFO=""
+else SCRIPT_VERS_INFO="$scriptVERINFO"
+fi
 
 ##----------------------------------------##
 ## Modified by Martinski W. [2025-Feb-15] ##
