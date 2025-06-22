@@ -176,15 +176,8 @@ Update_Version(){
 					Update_File shared-jy.tar.gz
 					Update_File timeserverd
 					TIMESERVER_NAME="$(TimeServer check)"
-					if [ "$TIMESERVER_NAME" = "ntpd" ]; then
-						Update_File S77ntpd
-						Update_File ntp.conf
-					elif [ "$TIMESERVER_NAME" = "chronyd" ]; then
-						Update_File S77chronyd
-						Update_File chrony.conf
 					fi
 					
-					Update_File ntpdstats_www.asp
 					
 					/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME_LOWER.sh" -o "/jffs/scripts/$SCRIPT_NAME_LOWER" && Print_Output true "$SCRIPT_NAME successfully updated"
 					chmod 0755 "/jffs/scripts/$SCRIPT_NAME_LOWER"
@@ -213,14 +206,7 @@ Update_Version(){
 		Update_File shared-jy.tar.gz
 		Update_File timeserverd
 		TIMESERVER_NAME="$(TimeServer check)"
-		if [ "$TIMESERVER_NAME" = "ntpd" ]; then
-			Update_File ntp.conf
-			Update_File S77ntpd
-		elif [ "$TIMESERVER_NAME" = "chronyd" ]; then
-			Update_File chrony.conf
-			Update_File S77chronyd
 		fi
-		Update_File ntpdstats_www.asp
 		/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME_LOWER.sh" -o "/jffs/scripts/$SCRIPT_NAME_LOWER" && Print_Output true "$SCRIPT_NAME successfully updated"
 		chmod 0755 "/jffs/scripts/$SCRIPT_NAME_LOWER"
 		Set_Version_Custom_Settings local "$serverver"
@@ -237,7 +223,6 @@ Update_Version(){
 }
 
 Update_File(){
-	if [ "$1" = "S77ntpd" ] || [ "$1" = "S77chronyd" ]; then
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
 		if ! diff -q "$tmpfile" "/opt/etc/init.d/$1" >/dev/null 2>&1; then
@@ -245,7 +230,6 @@ Update_File(){
 			TimeServer_Customise
 		fi
 		rm -f "$tmpfile"
-	elif [ "$1" = "ntp.conf" ] || [ "$1" = "chrony.conf" ]; then
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
 		if [ ! -f "$SCRIPT_STORAGE_DIR/$1" ]; then
@@ -262,7 +246,6 @@ Update_File(){
 			Print_Output true "$SCRIPT_STORAGE_DIR/$1.default does not exist, downloading now. Please compare against your $SCRIPT_STORAGE_DIR/$1" "$PASS"
 		fi
 		rm -f "$tmpfile"
-	elif [ "$1" = "ntpdstats_www.asp" ]; then
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
 		if [ -f "$SCRIPT_DIR/$1" ]; then
@@ -414,7 +397,6 @@ Conf_Exists(){
 		fi
 		return 0
 	else
-		{ echo "OUTPUTTIMEMODE=unix"; echo "STORAGELOCATION=jffs"; echo "TIMESERVER=ntpd"; echo "DAYSTOKEEP=30"; echo "LASTXRESULTS=10"; } > "$SCRIPT_CONF"
 		return 1
 	fi
 }
@@ -640,15 +622,10 @@ NTP_Redirect(){
 }
 
 NTP_Firmware_Check(){
-	ENABLED_NTPD="$(nvram get ntpd_enable)"
 	if ! Validate_Number "$ENABLED_NTPD"; then ENABLED_NTPD=0; fi
 	
 	if [ "$ENABLED_NTPD" -eq 1 ]; then
-		Print_Output true "Built-in ntpd is enabled and will conflict, it will be disabled" "$WARN"
-		nvram set ntpd_enable=0
-		nvram set ntpd_server_redir=0
 		nvram commit
-		service restart_ntpd
 		service restart_firewall
 		return 1
 	else
@@ -708,14 +685,12 @@ Mount_WebUI(){
 	FD=386
 	eval exec "$FD>$LOCKFILE"
 	flock -x "$FD"
-	Get_WebUI_Page "$SCRIPT_DIR/ntpdstats_www.asp"
 	if [ "$MyPage" = "none" ]; then
 		Print_Output true "Unable to mount $SCRIPT_NAME WebUI page, exiting" "$CRIT"
 		flock -u "$FD"
 		return 1
 	fi
 	
-	cp -f "$SCRIPT_DIR/ntpdstats_www.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
 	echo "$SCRIPT_NAME" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
 	
 	if [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
@@ -758,13 +733,6 @@ TimeServer_Customise(){
 	rm -f "/opt/etc/init.d/S77$TIMESERVER_NAME"
 	Download_File "$SCRIPT_REPO/S77$TIMESERVER_NAME" "/opt/etc/init.d/S77$TIMESERVER_NAME"
 	chmod +x "/opt/etc/init.d/S77$TIMESERVER_NAME"
-	if [ "$TIMESERVER_NAME" = "chronyd" ]; then
-		mkdir -p /opt/var/lib/chrony
-		mkdir -p /opt/var/run/chrony
-		chown -R nobody:nobody /opt/var/lib/chrony
-		chown -R nobody:nobody /opt/var/run/chrony
-		chmod -R 770 /opt/var/lib/chrony
-		chmod -R 770 /opt/var/run/chrony
 	fi
 	"/opt/etc/init.d/S77$TIMESERVER_NAME" start >/dev/null 2>&1
 }
@@ -779,12 +747,6 @@ ScriptStorageLocation(){
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/config" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/config.bak" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntpstatstext.js" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntpdstats.db" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntp.conf" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/ntp.conf.default" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/chrony.conf" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/chrony.conf.default" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/.chronyugraded" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME_LOWER.d/.indexcreated" "/opt/share/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			"/opt/etc/init.d/S77$TIMESERVER_NAME" restart >/dev/null 2>&1
 			SCRIPT_CONF="/opt/share/$SCRIPT_NAME_LOWER.d/config"
@@ -798,12 +760,6 @@ ScriptStorageLocation(){
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/config" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/config.bak" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/ntpstatstext.js" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME_LOWER.d/ntpdstats.db" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME_LOWER.d/ntp.conf" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME_LOWER.d/ntp.conf.default" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME_LOWER.d/chrony.conf" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME_LOWER.d/chrony.conf.default" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME_LOWER.d/.chronyugraded" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME_LOWER.d/.indexcreated" "/jffs/addons/$SCRIPT_NAME_LOWER.d/" 2>/dev/null
 			"/opt/etc/init.d/S77$TIMESERVER_NAME" restart >/dev/null 2>&1
 			SCRIPT_CONF="/jffs/addons/$SCRIPT_NAME_LOWER.d/config"
@@ -845,34 +801,14 @@ OutputTimeMode(){
 
 TimeServer(){
 	case "$1" in
-		ntpd)
-			sed -i 's/^TIMESERVER.*$/TIMESERVER=ntpd/' "$SCRIPT_CONF"
-			/opt/etc/init.d/S77chronyd stop >/dev/null 2>&1
-			rm -f /opt/etc/init.d/S77chronyd
-			if [ ! -f /opt/sbin/ntpd ]; then
 				opkg update
 				opkg install ntp-utils
-				opkg install ntpd
 			fi
-			Update_File ntp.conf >/dev/null 2>&1
-			Update_File S77ntpd >/dev/null 2>&1
 		;;
-		chronyd)
-			sed -i 's/^TIMESERVER.*$/TIMESERVER=chronyd/' "$SCRIPT_CONF"
-			/opt/etc/init.d/S77ntpd stop >/dev/null 2>&1
-			rm -f /opt/etc/init.d/S77ntpd
-			if [ ! -f /opt/sbin/chronyd ]; then
 				opkg update
-				if [ -n "$(opkg info chrony-nts)" ]; then
-					opkg install chrony-nts
-					touch "$SCRIPT_STORAGE_DIR/.chronyugraded"
 				else
-					opkg install chrony
-					touch "$SCRIPT_STORAGE_DIR/.chronyugraded"
 				fi
 			fi
-			Update_File chrony.conf >/dev/null 2>&1
-			Update_File S77chronyd >/dev/null 2>&1
 		;;
 		check)
 			TIMESERVER=$(grep "TIMESERVER" "$SCRIPT_CONF" | cut -f2 -d"=")
@@ -1017,7 +953,6 @@ Get_TimeServer_Stats(){
 	killall ntp 2>/dev/null
 	
 	TIMESERVER="$(TimeServer check)"
-	if [ "$TIMESERVER" = "ntpd" ]; then
 		tmpfile=/tmp/ntp-stats.$$
 		ntpq -4 -c rv | awk 'BEGIN{ RS=","}{ print }' > "$tmpfile"
 		
@@ -1028,9 +963,6 @@ Get_TimeServer_Stats(){
 		[ -n "$(grep clk_wander "$tmpfile" | awk 'BEGIN{FS="="}{print $2}')" ] && NWANDER=$(grep clk_wander "$tmpfile" | awk 'BEGIN{FS="="}{print $2}') || NWANDER=0
 		[ -n "$(grep rootdisp "$tmpfile" | awk 'BEGIN{FS="="}{print $2}')" ] &&  NDISPER=$(grep rootdisp "$tmpfile" | awk 'BEGIN{FS="="}{print $2}') || NDISPER=0
 		rm -f "$tmpfile"
-	elif [ "$TIMESERVER" = "chronyd" ]; then
-		tmpfile=/tmp/chrony-stats.$$
-		chronyc tracking > "$tmpfile"
 		
 		[ -n "$(grep "Last offset" "$tmpfile" | awk '{print $4}')" ] && NOFFSET=$(grep Last "$tmpfile" | awk '{print $4}') || NOFFSET=0
 		[ -n "$(grep Frequency "$tmpfile" | awk '{print $3}')" ] && NFREQ=$(grep Frequency "$tmpfile" | awk '{print $3}') || NFREQ=0
@@ -1056,7 +988,6 @@ Get_TimeServer_Stats(){
 		echo "CREATE TABLE IF NOT EXISTS [ntpstats] ([StatID] INTEGER PRIMARY KEY NOT NULL,[Timestamp] NUMERIC NOT NULL,[Offset] REAL NOT NULL,[Frequency] REAL NOT NULL,[Sys_Jitter] REAL NOT NULL,[Clk_Jitter] REAL NOT NULL,[Clk_Wander] REAL NOT NULL,[Rootdisp] REAL NOT NULL);"
 		echo "INSERT INTO ntpstats ([Timestamp],[Offset],[Frequency],[Sys_Jitter],[Clk_Jitter],[Clk_Wander],[Rootdisp]) values($timenow,$NOFFSET,$NFREQ,$NSJIT,$NCJIT,$NWANDER,$NDISPER);"
 	} > /tmp/ntp-stats.sql
-	"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 	
 	{
 		echo "DELETE FROM [ntpstats] WHERE [Timestamp] < strftime('%s',datetime($timenow,'unixepoch','-$(DaysToKeep check) day'));"
@@ -1064,7 +995,6 @@ Get_TimeServer_Stats(){
 		echo "PRAGMA cache_size=-20000;"
 		echo "ANALYZE ntpstats;"
 	} > /tmp/ntp-stats.sql
-	"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql >/dev/null 2>&1
 	rm -f /tmp/ntp-stats.sql
 	
 	echo 'var ntpstatus = "GenerateCSV";' > /tmp/detect_dnsMerlin.js
@@ -1102,7 +1032,6 @@ Generate_CSVs(){
 			echo ".output $CSV_OUTPUT_DIR/${FILENAME}_raw_daily.htm"
 			echo "SELECT '$metric' Metric,[Timestamp] Time,printf('%f', $metric) Value FROM ntpstats WHERE ([Timestamp] >= strftime('%s',datetime($timenow,'unixepoch','-1 day'))) ORDER BY [Timestamp] DESC;"
 		} > /tmp/ntp-stats.sql
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 		
 		{
 			echo ".mode csv"
@@ -1110,7 +1039,6 @@ Generate_CSVs(){
 			echo ".output $CSV_OUTPUT_DIR/${FILENAME}_raw_weekly.htm"
 			echo "SELECT '$metric' Metric,[Timestamp] Time,printf('%f', $metric) Value FROM ntpstats WHERE ([Timestamp] >= strftime('%s',datetime($timenow,'unixepoch','-7 day'))) ORDER BY [Timestamp] DESC;"
 		} > /tmp/ntp-stats.sql
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 		
 		{
 			echo ".mode csv"
@@ -1118,25 +1046,18 @@ Generate_CSVs(){
 			echo ".output $CSV_OUTPUT_DIR/${FILENAME}_raw_monthly.htm"
 			echo "SELECT '$metric' Metric,[Timestamp] Time,printf('%f', $metric) Value FROM ntpstats WHERE ([Timestamp] >= strftime('%s',datetime($timenow,'unixepoch','-30 day'))) ORDER BY [Timestamp] DESC;"
 		} > /tmp/ntp-stats.sql
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 		
 		WriteSql_ToFile "$metric" ntpstats 1 1 "$CSV_OUTPUT_DIR/${FILENAME}_hour" daily /tmp/ntp-stats.sql "$timenow"
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 		
 		WriteSql_ToFile "$metric" ntpstats 1 7 "$CSV_OUTPUT_DIR/${FILENAME}_hour" weekly /tmp/ntp-stats.sql "$timenow"
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 		
 		WriteSql_ToFile "$metric" ntpstats 1 30 "$CSV_OUTPUT_DIR/${FILENAME}_hour" monthly /tmp/ntp-stats.sql "$timenow"
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 		
 		WriteSql_ToFile "$metric" ntpstats 24 1 "$CSV_OUTPUT_DIR/${FILENAME}_day" daily /tmp/ntp-stats.sql "$timenow"
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 		
 		WriteSql_ToFile "$metric" ntpstats 24 7 "$CSV_OUTPUT_DIR/${FILENAME}_day" weekly /tmp/ntp-stats.sql "$timenow"
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 		
 		WriteSql_ToFile "$metric" ntpstats 24 30 "$CSV_OUTPUT_DIR/${FILENAME}_day" monthly /tmp/ntp-stats.sql "$timenow"
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 		
 		rm -f "$CSV_OUTPUT_DIR/${FILENAME}daily.htm"
 		rm -f "$CSV_OUTPUT_DIR/${FILENAME}weekly.htm"
@@ -1153,7 +1074,6 @@ Generate_CSVs(){
 		echo ".output $CSV_OUTPUT_DIR/CompleteResults.htm"
 		echo "SELECT [Timestamp],[Offset],[Frequency],[Sys_Jitter],[Clk_Jitter],[Clk_Wander],[Rootdisp] FROM ntpstats WHERE ([Timestamp] >= strftime('%s',datetime($timenow,'unixepoch','-$(DaysToKeep check) day'))) ORDER BY [Timestamp] DESC;"
 	} > /tmp/ntp-complete.sql
-	"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-complete.sql
 	rm -f /tmp/ntp-complete.sql
 	
 	dos2unix "$CSV_OUTPUT_DIR/"*.htm
@@ -1187,7 +1107,6 @@ Generate_LastXResults(){
 		echo ".output /tmp/ntp-lastx.csv"
 		echo "SELECT [Timestamp],[Offset],[Frequency] FROM ntpstats ORDER BY [Timestamp] DESC LIMIT $(LastXResults check);"
 	} > /tmp/ntp-lastx.sql
-	"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-lastx.sql
 	rm -f /tmp/ntp-lastx.sql
 	sed -i 's/"//g' /tmp/ntp-lastx.csv
 	mv /tmp/ntp-lastx.csv "$SCRIPT_STORAGE_DIR/lastx.csv"
@@ -1195,18 +1114,14 @@ Generate_LastXResults(){
 
 Reset_DB(){
 	SIZEAVAIL="$(df -P -k "$SCRIPT_STORAGE_DIR" | awk '{print $4}' | tail -n 1)"
-	SIZEDB="$(ls -l "$SCRIPT_STORAGE_DIR/ntpdstats.db" | awk '{print $5}')"
 	if [ "$SIZEDB" -gt "$((SIZEAVAIL*1024))" ]; then
-		Print_Output true "Database size exceeds available space. $(ls -lh "$SCRIPT_STORAGE_DIR/ntpdstats.db" | awk '{print $5}')B is required to create backup." "$ERR"
 		return 1
 	else
 		Print_Output true "Sufficient free space to back up database, proceeding..." "$PASS"
-		if ! cp -a "$SCRIPT_STORAGE_DIR/ntpdstats.db" "$SCRIPT_STORAGE_DIR/ntpdstats.db.bak"; then
 			Print_Output true "Database backup failed, please check storage device" "$WARN"
 		fi
 		
 		echo "DELETE FROM [ntpstats];" > /tmp/dnsMerlin-stats.sql
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/dnsMerlin-stats.sql
 		rm -f /tmp/dnsMerlin-stats.sql
 		
 		Print_Output true "Database reset complete" "$WARN"
@@ -1231,33 +1146,18 @@ Shortcut_Script(){
 
 Process_Upgrade(){
 	rm -f "$SCRIPT_STORAGE_DIR/.tableupgraded"
-	if [ ! -f "$SCRIPT_STORAGE_DIR/.chronyugraded" ]; then
-		if [ "$(TimeServer check)" = "chronyd" ]; then
-			Print_Output true "Checking if chrony-nts is available for your router..." "$PASS"
 			opkg update >/dev/null 2>&1
-			if [ -n "$(opkg info chrony-nts)" ]; then
-				Print_Output true "chrony-nts is available, replacing chrony with chrony-nts..." "$PASS"
-				/opt/etc/init.d/S77chronyd stop >/dev/null 2>&1
-				rm -f /opt/etc/init.d/S77chronyd
-				opkg remove chrony >/dev/null 2>&1
-				opkg install chrony-nts >/dev/null 2>&1
-				Update_File chrony.conf >/dev/null 2>&1
-				Update_File S77chronyd >/dev/null 2>&1
 			else
-				Print_Output true "chrony-nts not found in Entware for your router" "$WARN"
 			fi
-			touch "$SCRIPT_STORAGE_DIR/.chronyugraded"
 		fi
 	fi
 	if [ ! -f "$SCRIPT_STORAGE_DIR/.indexcreated" ]; then
 		renice 15 $$
 		Print_Output true "Creating database table indexes..." "$PASS"
 		echo "CREATE INDEX IF NOT EXISTS idx_time_offset ON ntpstats (Timestamp,Offset);" > /tmp/ntp-upgrade.sql
-		while ! "$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-upgrade.sql >/dev/null 2>&1; do
 			sleep 1
 		done
 		echo "CREATE INDEX IF NOT EXISTS idx_time_frequency ON ntpstats (Timestamp,Frequency);" > /tmp/ntp-upgrade.sql
-		while ! "$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-upgrade.sql >/dev/null 2>&1; do
 			sleep 1
 		done
 		rm -f /tmp/ntp-upgrade.sql
@@ -1334,10 +1234,6 @@ MainMenu(){
 	fi
 	TIMESERVER_NAME_MENU="$(TimeServer check)"
 	CONFFILE_MENU=""
-	if [ "$TIMESERVER_NAME_MENU" = "ntpd" ]; then
-		CONFFILE_MENU="$SCRIPT_STORAGE_DIR/ntp.conf"
-	elif [ "$TIMESERVER_NAME_MENU" = "chronyd" ]; then
-		CONFFILE_MENU="$SCRIPT_STORAGE_DIR/chrony.conf"
 	fi
 	
 	printf "WebUI for %s is available at:\\n${SETTING}%s${CLEARFORMAT}\\n\\n" "$SCRIPT_NAME" "$(Get_WebUI_URL)"
@@ -1348,7 +1244,6 @@ MainMenu(){
 	printf "5.    Set number of timeserver stats to show in WebUI\\n      Currently: ${SETTING}%s results will be shown${CLEARFORMAT}\\n\\n" "$(LastXResults check)"
 	printf "6.    Set number of days data to keep in database\\n      Currently: ${SETTING}%s days data will be kept${CLEARFORMAT}\\n\\n" "$(DaysToKeep check)"
 	printf "s.    Toggle storage location for stats and config\\n      Current location is ${SETTING}%s${CLEARFORMAT} \\n\\n" "$(ScriptStorageLocation check)"
-	printf "t.    Switch timeserver between ntpd and chronyd\\n      Currently using ${SETTING}%s${CLEARFORMAT}\\n      Config location: ${SETTING}%s${CLEARFORMAT}\\n\\n" "$(TimeServer check)" "$CONFFILE_MENU"
 	printf "r.    Restart ${SETTING}%s${CLEARFORMAT}\\n\\n" "$(TimeServer check)"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Update %s with latest version (force update)\\n\\n" "$SCRIPT_NAME"
@@ -1429,10 +1324,6 @@ MainMenu(){
 			t)
 				printf "\\n"
 				if Check_Lock menu; then
-					if [ "$(TimeServer check)" = "ntpd" ]; then
-						TimeServer chronyd
-					elif [ "$(TimeServer check)" = "chronyd" ]; then
-						TimeServer ntpd
 					fi
 					Clear_Lock
 				fi
@@ -1531,7 +1422,6 @@ Check_Requirements(){
 		opkg update
 		opkg install sqlite3-cli
 		opkg install ntp-utils
-		opkg install ntpd
 		opkg install findutils
 		return 0
 	else
@@ -1561,8 +1451,6 @@ Menu_Install(){
 	ScriptStorageLocation load
 	Create_Symlinks
 	
-	Update_File ntp.conf
-	Update_File ntpdstats_www.asp
 	Update_File shared-jy.tar.gz
 	Update_File timeserverd
 	
@@ -1573,7 +1461,6 @@ Menu_Install(){
 	TimeServer_Customise
 	
 	echo "CREATE TABLE IF NOT EXISTS [ntpstats] ([StatID] INTEGER PRIMARY KEY NOT NULL,[Timestamp] NUMERIC NOT NULL,[Offset] REAL NOT NULL,[Frequency] REAL NOT NULL,[Sys_Jitter] REAL NOT NULL,[Clk_Jitter] REAL NOT NULL,[Clk_Wander] REAL NOT NULL,[Rootdisp] REAL NOT NULL);" > /tmp/ntp-stats.sql
-	"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql
 	rm -f /tmp/ntp-stats.sql
 	touch "$SCRIPT_STORAGE_DIR/lastx.csv"
 	Process_Upgrade
@@ -1652,10 +1539,6 @@ Menu_Edit(){
 	if [ "$exitmenu" != "true" ]; then
 		TIMESERVER_NAME="$(TimeServer check)"
 		CONFFILE=""
-		if [ "$TIMESERVER_NAME" = "ntpd" ]; then
-			CONFFILE="$SCRIPT_STORAGE_DIR/ntp.conf"
-		elif [ "$TIMESERVER_NAME" = "chronyd" ]; then
-			CONFFILE="$SCRIPT_STORAGE_DIR/chrony.conf"
 		fi
 		oldmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
 		$texteditor "$CONFFILE"
@@ -1700,7 +1583,6 @@ Menu_Uninstall(){
 	FD=386
 	eval exec "$FD>$LOCKFILE"
 	flock -x "$FD"
-	Get_WebUI_Page "$SCRIPT_DIR/ntpdstats_www.asp"
 	if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]; then
 		sed -i "\\~$MyPage~d" /tmp/menuTree.js
 		umount /www/require/modules/menuTree.js
@@ -1709,18 +1591,13 @@ Menu_Uninstall(){
 		rm -f "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
 	fi
 	flock -u "$FD"
-	rm -f "$SCRIPT_DIR/ntpdstats_www.asp" 2>/dev/null
 	rm -rf "$SCRIPT_WEB_DIR" 2>/dev/null
 	
 	Shortcut_Script delete
 	TIMESERVER_NAME="$(TimeServer check)"
 	"/opt/etc/init.d/S77$TIMESERVER_NAME" stop >/dev/null 2>&1
-	opkg remove --autoremove ntpd
 	opkg remove --autoremove ntp-utils
-	opkg remove --autoremove chrony
 	
-	rm -f /opt/etc/init.d/S77ntpd
-	rm -f /opt/etc/init.d/S77chronyd
 	
 	SETTINGSFILE="/jffs/addons/custom_settings.txt"
 	sed -i '/dnsMerlin_version_local/d' "$SETTINGSFILE"
@@ -1790,7 +1667,6 @@ Show_About(){
 About
   $SCRIPT_NAME implements an NTP time server for AsusWRT Merlin
   with charts for daily, weekly and monthly summaries of performance.
-  A choice between ntpd and chrony is available.
 License
   $SCRIPT_NAME is free to use under the GNU General Public License
   version 3 (GPL-3.0) https://opensource.org/licenses/GPL-3.0

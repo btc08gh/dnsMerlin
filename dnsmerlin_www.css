@@ -12,15 +12,6 @@ thead.collapsible-jquery {
   cursor: pointer;
 }
 
-td.nodata {
-  font-size: 48px !important;
-  font-weight: bolder !important;
-  height: 65px !important;
-  font-family: Arial !important;
-  border: none !important;
-  text-align: center !important;
-}
-
 .SettingsTable {
   text-align: left;
 }
@@ -122,73 +113,4 @@ td.nodata {
   margin-left: 0px !important;
   margin-bottom: 5px !important;
   text-align: center !important;
-}
-
-div.sortTableContainer {
-  height: 300px;
-  overflow-y: scroll;
-  width: 745px;
-  border: 1px solid #000;
-}
-
-.sortTable {
-  table-layout: fixed !important;
-  border: none;
-}
-
-thead.sortTableHeader th {
-  background-image: linear-gradient(rgb(146, 160, 165) 0%, rgb(102, 117, 124) 100%);
-  border-top: none !important;
-  border-left: none !important;
-  border-right: none !important;
-  border-bottom: 1px solid #000 !important;
-  font-weight: bolder;
-  padding: 2px;
-  text-align: center;
-  color: #fff;
-  position: sticky;
-  top: 0;
-  font-size: 11px !important;
-}
-
-thead.sortTableHeader th:first-child,
-thead.sortTableHeader th:last-child {
-  border-right: none !important;
-}
-
-thead.sortTableHeader th:last-child {
-  /*padding-left: 4px !important;*/
-}
-
-thead.sortTableHeader th:first-child,
-thead.sortTableHeader td:first-child {
-  border-left: none !important;
-}
-
-tbody.sortTableContent td:last-child, tbody.sortTableContent tr.sortNormalRow td:last-child, tbody.sortTableContent tr.sortAlternateRow td:last-child {
-  /*padding-left: 4px !important;*/
-}
-
-tbody.sortTableContent td{
-  border-bottom: 1px solid #000 !important;
-  border-left: none !important;
-  border-right: 1px solid #000 !important;
-  border-top: none !important;
-  padding: 2px;
-  text-align: center;
-  overflow: hidden !important;
-  white-space: nowrap !important;
-  font-size: 12px !important;
-}
-
-tbody.sortTableContent tr.sortRow:nth-child(odd) td {
-  background-color: #2F3A3E !important;
-}
-
-tbody.sortTableContent tr.sortRow:nth-child(even) td {
-  background-color: #475A5F !important;
-}
-
-th.sortable {
-  cursor: pointer;
 }
