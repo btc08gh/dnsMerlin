@@ -1,16 +1,16 @@
 #!/bin/sh
 
 ##############################################################
-##           _           __  __              _  _           ##
-##          | |         |  \/  |            | |(_)          ##
-##    _ __  | |_  _ __  | \  / |  ___  _ __ | | _  _ __     ##
-##   | '_ \ | __|| '_ \ | |\/| | / _ \| '__|| || || '_ \    ##
-##   | | | || |_ | |_) || |  | ||  __/| |   | || || | | |   ##
-##   |_| |_| \__|| .__/ |_|  |_| \___||_|   |_||_||_| |_|   ##
-##               | |                                        ##
-##               |_|                                        ##
+##        _              __  __              _  _           ##
+##       | |            |  \/  |            | |(_)          ##
+##     __| | _ __   ___ | \  / |  ___  _ __ | | _  _ __     ##
+##    / _` || '_ \ / __|| |\/| | / _ \| '__|| || || '_ \    ##
+##   | (_| || | | |\__ \| |  | ||  __/| |   | || || | | |   ##
+##    \__,_||_| |_||___/|_|  |_| \___||_|   |_||_||_| |_|   ##
 ##                                                          ##
-##           https://github.com/jackyaz/ntpMerlin           ##
+##                                                          ##
+##                                                          ##
+##           https://github.com/btc08gh/dnsMerlin           ##
 ##                                                          ##
 ##############################################################
 
@@ -26,7 +26,7 @@
 ##############################################################
 
 ### Start of script variables ###
-readonly SCRIPT_NAME="ntpMerlin"
+readonly SCRIPT_NAME="dnsMerlin"
 readonly SCRIPT_NAME_LOWER="$(echo "$SCRIPT_NAME" | tr 'A-Z' 'a-z' | sed 's/d//')"
 readonly SCRIPT_VERSION="v3.4.5"
 SCRIPT_BRANCH="master"
@@ -102,28 +102,28 @@ Set_Version_Custom_Settings(){
 	case "$1" in
 		local)
 			if [ -f "$SETTINGSFILE" ]; then
-				if [ "$(grep -c "ntpmerlin_version_local" $SETTINGSFILE)" -gt 0 ]; then
-					if [ "$2" != "$(grep "ntpmerlin_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
-						sed -i "s/ntpmerlin_version_local.*/ntpmerlin_version_local $2/" "$SETTINGSFILE"
+				if [ "$(grep -c "dnsMerlin_version_local" $SETTINGSFILE)" -gt 0 ]; then
+					if [ "$2" != "$(grep "dnsMerlin_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
+						sed -i "s/dnsMerlin_version_local.*/dnsMerlin_version_local $2/" "$SETTINGSFILE"
 					fi
 				else
-					echo "ntpmerlin_version_local $2" >> "$SETTINGSFILE"
+					echo "dnsMerlin_version_local $2" >> "$SETTINGSFILE"
 				fi
 			else
-				echo "ntpmerlin_version_local $2" >> "$SETTINGSFILE"
+				echo "dnsMerlin_version_local $2" >> "$SETTINGSFILE"
 			fi
 		;;
 		server)
 			if [ -f "$SETTINGSFILE" ]; then
-				if [ "$(grep -c "ntpmerlin_version_server" $SETTINGSFILE)" -gt 0 ]; then
-					if [ "$2" != "$(grep "ntpmerlin_version_server" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
-						sed -i "s/ntpmerlin_version_server.*/ntpmerlin_version_server $2/" "$SETTINGSFILE"
+				if [ "$(grep -c "dnsMerlin_version_server" $SETTINGSFILE)" -gt 0 ]; then
+					if [ "$2" != "$(grep "dnsMerlin_version_server" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
+						sed -i "s/dnsMerlin_version_server.*/dnsMerlin_version_server $2/" "$SETTINGSFILE"
 					fi
 				else
-					echo "ntpmerlin_version_server $2" >> "$SETTINGSFILE"
+					echo "dnsMerlin_version_server $2" >> "$SETTINGSFILE"
 				fi
 			else
-				echo "ntpmerlin_version_server $2" >> "$SETTINGSFILE"
+				echo "dnsMerlin_version_server $2" >> "$SETTINGSFILE"
 			fi
 		;;
 	esac
@@ -323,20 +323,20 @@ Validate_Number(){
 
 Conf_FromSettings(){
 	SETTINGSFILE="/jffs/addons/custom_settings.txt"
-	TMPFILE="/tmp/ntpmerlin_settings.txt"
+	TMPFILE="/tmp/dnsMerlin_settings.txt"
 	if [ -f "$SETTINGSFILE" ]; then
-		if [ "$(grep "ntpmerlin_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]; then
+		if [ "$(grep "dnsMerlin_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]; then
 			Print_Output true "Updated settings from WebUI found, merging into $SCRIPT_CONF" "$PASS"
 			cp -a "$SCRIPT_CONF" "$SCRIPT_CONF.bak"
-			grep "ntpmerlin_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
-			sed -i "s/ntpmerlin_//g;s/ /=/g" "$TMPFILE"
+			grep "dnsMerlin_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
+			sed -i "s/dnsMerlin_//g;s/ /=/g" "$TMPFILE"
 			while IFS='' read -r line || [ -n "$line" ]; do
 				SETTINGNAME="$(echo "$line" | cut -f1 -d'=' | awk '{ print toupper($1) }')"
 				SETTINGVALUE="$(echo "$line" | cut -f2 -d'=')"
 				sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
 			done < "$TMPFILE"
-			grep 'ntpmerlin_version' "$SETTINGSFILE" > "$TMPFILE"
-			sed -i "\\~ntpmerlin_~d" "$SETTINGSFILE"
+			grep 'dnsMerlin_version' "$SETTINGSFILE" > "$TMPFILE"
+			sed -i "\\~dnsMerlin_~d" "$SETTINGSFILE"
 			mv "$SETTINGSFILE" "$SETTINGSFILE.bak"
 			cat "$SETTINGSFILE.bak" "$TMPFILE" > "$SETTINGSFILE"
 			rm -f "$TMPFILE"
@@ -385,7 +385,7 @@ Create_Dirs(){
 Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
-	ln -s /tmp/detect_ntpmerlin.js "$SCRIPT_WEB_DIR/detect_ntpmerlin.js" 2>/dev/null
+	ln -s /tmp/detect_dnsMerlin.js "$SCRIPT_WEB_DIR/detect_dnsMerlin.js" 2>/dev/null
 	ln -s "$SCRIPT_STORAGE_DIR/ntpstatstext.js" "$SCRIPT_WEB_DIR/ntpstatstext.js" 2>/dev/null
 	ln -s "$SCRIPT_STORAGE_DIR/lastx.csv" "$SCRIPT_WEB_DIR/lastx.htm" 2>/dev/null
 	
@@ -1012,7 +1012,7 @@ Get_TimeServer_Stats(){
 	ScriptStorageLocation load
 	Create_Symlinks
 	
-	echo 'var ntpstatus = "InProgress";' > /tmp/detect_ntpmerlin.js
+	echo 'var ntpstatus = "InProgress";' > /tmp/detect_dnsMerlin.js
 	
 	killall ntp 2>/dev/null
 	
@@ -1067,7 +1067,7 @@ Get_TimeServer_Stats(){
 	"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntp-stats.sql >/dev/null 2>&1
 	rm -f /tmp/ntp-stats.sql
 	
-	echo 'var ntpstatus = "GenerateCSV";' > /tmp/detect_ntpmerlin.js
+	echo 'var ntpstatus = "GenerateCSV";' > /tmp/detect_dnsMerlin.js
 	
 	Generate_CSVs
 	
@@ -1075,7 +1075,7 @@ Get_TimeServer_Stats(){
 	WriteStats_ToJS /tmp/ntpstatstitle.txt "$SCRIPT_STORAGE_DIR/ntpstatstext.js" SetNTPDStatsTitle statstitle
 	rm -f /tmp/ntpstatstitle.txt
 	
-	echo 'var ntpstatus = "Done";' > /tmp/detect_ntpmerlin.js
+	echo 'var ntpstatus = "Done";' > /tmp/detect_dnsMerlin.js
 }
 
 Generate_CSVs(){
@@ -1174,7 +1174,7 @@ Generate_CSVs(){
 	fi
 	
 	mv "$tmpoutputdir/CompleteResults.csv" "$CSV_OUTPUT_DIR/CompleteResults.htm"
-	rm -f "$CSV_OUTPUT_DIR/ntpmerlindata.zip"
+	rm -f "$CSV_OUTPUT_DIR/dnsMerlindata.zip"
 	rm -rf "$tmpoutputdir"
 	
 	renice 0 $$
@@ -1205,9 +1205,9 @@ Reset_DB(){
 			Print_Output true "Database backup failed, please check storage device" "$WARN"
 		fi
 		
-		echo "DELETE FROM [ntpstats];" > /tmp/ntpmerlin-stats.sql
-		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/ntpmerlin-stats.sql
-		rm -f /tmp/ntpmerlin-stats.sql
+		echo "DELETE FROM [ntpstats];" > /tmp/dnsMerlin-stats.sql
+		"$SQLITE3_PATH" "$SCRIPT_STORAGE_DIR/ntpdstats.db" < /tmp/dnsMerlin-stats.sql
+		rm -f /tmp/dnsMerlin-stats.sql
 		
 		Print_Output true "Database reset complete" "$WARN"
 	fi
@@ -1314,7 +1314,7 @@ ScriptHeader(){
 	printf "${BOLD}##                                                          ##${CLEARFORMAT}\\n"
 	printf "${BOLD}##                   %s on %-11s                  ##${CLEARFORMAT}\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
 	printf "${BOLD}##                                                          ##${CLEARFORMAT}\\n"
-	printf "${BOLD}##         https://github.com/jackyaz/ntpMerlin             ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##         https://github.com/jackyaz/dnsMerlin             ##${CLEARFORMAT}\\n"
 	printf "${BOLD}##                                                          ##${CLEARFORMAT}\\n"
 	printf "${BOLD}##                 DST is currently %-8s                ##${CLEARFORMAT}\\n" "$DST_ENABLED"
 	printf "${BOLD}##                                                          ##${CLEARFORMAT}\\n"
@@ -1723,8 +1723,8 @@ Menu_Uninstall(){
 	rm -f /opt/etc/init.d/S77chronyd
 	
 	SETTINGSFILE="/jffs/addons/custom_settings.txt"
-	sed -i '/ntpmerlin_version_local/d' "$SETTINGSFILE"
-	sed -i '/ntpmerlin_version_server/d' "$SETTINGSFILE"
+	sed -i '/dnsMerlin_version_local/d' "$SETTINGSFILE"
+	sed -i '/dnsMerlin_version_server/d' "$SETTINGSFILE"
 	
 	printf "\\n${BOLD}Do you want to delete %s configuration file and stats? (y/n)${CLEARFORMAT}  " "$SCRIPT_NAME"
 	read -r confirm
@@ -1884,7 +1884,7 @@ case "$1" in
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME_LOWER" ]; then
-			rm -f /tmp/detect_ntpmerlin.js
+			rm -f /tmp/detect_dnsMerlin.js
 			Check_Lock
 			sleep 3
 			Get_TimeServer_Stats
