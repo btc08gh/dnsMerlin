@@ -1,5 +1,11 @@
 # dnsMerlin
 
+THIS IS A Work In Progress
+
+it does NOT currently work at all.
+
+Do NOT use
+
 ## v0.1.0
 ### Updated on 2025-06-22
 ## About
