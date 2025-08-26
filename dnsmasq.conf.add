@@ -1,0 +1,5 @@
+addn-hosts=/jffs/configs/hosts
+addn-hosts=/jffs/addons/YazDHCP.d/.hostnames # YazDHCP_hostnames
+dhcp-hostsfile=/jffs/addons/YazDHCP.d/.staticlist # YazDHCP_staticlist
+#log-queries
+#log-facility=/tmp/dnsmasq.log
