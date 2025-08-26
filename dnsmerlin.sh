@@ -39,7 +39,6 @@ readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
 readonly DNSMASQ_CONF="/jffs/configs/dnsmasq.conf.add"
 readonly DNSMASQ_BACKUP_DIR="$SCRIPT_DIR/backups"
-[ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 ### End of script variables ###
 
 ### Start of output format variables ###
@@ -741,7 +740,8 @@ Menu_RestartDNSMasq(){
 }
 
 Menu_Startup(){
-	NTP_Ready wait
+	# Allow time for DNS services to initialize
+	sleep 5
 	Get_DNS_Status
 }
 
@@ -766,12 +766,6 @@ Menu_Uninstall(){
 			Clear_Lock
 		;;
 	esac
-}
-
-NTP_Ready(){
-	if [ "$1" = "wait" ]; then
-		sleep 10
-	fi
 }
 
 Show_About(){
@@ -805,7 +799,6 @@ EOF
 }
 
 if [ -z "$1" ]; then
-	NTP_Ready
 	Create_Dirs
 	Conf_Exists  
 	Create_Symlinks
