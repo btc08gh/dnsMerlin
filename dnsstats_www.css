@@ -1,0 +1,348 @@
+/* dnsMerlin CSS - Based on ntpMerlin styling */
+
+/* General form styling */
+p {
+    font-weight: bolder;
+}
+
+/* Collapsible headers */
+thead.collapsible-jquery {
+    color: #fff;
+    padding: 0;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    cursor: pointer;
+}
+
+/* No data message styling */
+td.nodata {
+    height: 65px!important;
+    border: none!important;
+    text-align: center!important;
+    font: bolder 48px Arial!important;
+}
+
+/* Settings table styling */
+.SettingsTable {
+    text-align: left;
+}
+
+.SettingsTable input {
+    text-align: left;
+    margin-left: 3px!important;
+}
+
+.SettingsTable input.savebutton {
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border-right: solid 1px #000;
+    border-left: solid 1px #000;
+    border-bottom: solid 1px #000;
+}
+
+.SettingsTable td.savebutton {
+    border-right: solid 1px #000;
+    border-left: solid 1px #000;
+    border-bottom: solid 1px #000;
+    background-color: #4d595d;
+}
+
+.SettingsTable .cronbutton {
+    text-align: center;
+    min-width: 50px;
+    width: 50px;
+    height: 23px;
+    vertical-align: middle;
+}
+
+.SettingsTable select {
+    margin-left: 3px!important;
+}
+
+.SettingsTable label {
+    margin-right: 10px!important;
+    vertical-align: top!important;
+}
+
+.SettingsTable th {
+    background-color: #1F2D35!important;
+    background: #2F3A3E!important;
+    border-bottom: none!important;
+    border-top: none!important;
+    font-size: 12px!important;
+    color: #fff!important;
+    padding: 4px!important;
+    font-weight: bolder!important;
+}
+
+.SettingsTable td {
+    word-wrap: break-word!important;
+    overflow-wrap: break-word!important;
+    border-right: none;
+    border-left: none;
+}
+
+.SettingsTable span.settingname {
+    background-color: #1F2D35!important;
+    background: #2F3A3E!important;
+}
+
+.SettingsTable td.settingname {
+    border-right: solid 1px #000;
+    border-left: solid 1px #000;
+    background-color: #1F2D35!important;
+    background: #2F3A3E!important;
+    width: 35%!important;
+}
+
+.SettingsTable td.settingvalue {
+    text-align: left!important;
+    border-right: solid 1px #000;
+}
+
+.SettingsTable th:first-child {
+    border-left: none!important;
+}
+
+.SettingsTable th:last-child {
+    border-right: none!important;
+}
+
+.SettingsTable .invalid {
+    background-color: #8b0000!important;
+}
+
+.SettingsTable .disabled {
+    background-color: #CCC!important;
+    color: #888!important;
+}
+
+.removespacing {
+    padding-left: 0!important;
+    margin-left: 0!important;
+    margin-bottom: 5px!important;
+    text-align: center!important;
+}
+
+/* DNS Configuration specific styling */
+.config-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #666;
+    background-color: #1F2D35;
+    border-radius: 5px;
+}
+
+.config-section h3 {
+    color: #fff;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Additional hosts entry styling */
+.addnhost-entry {
+    margin-bottom: 15px;
+    padding: 12px;
+    border: 1px solid #666;
+    background-color: #2F3A3E;
+    border-radius: 4px;
+    position: relative;
+}
+
+.addnhost-entry:hover {
+    background-color: #3F4A4E;
+}
+
+.addnhost-entry label {
+    display: inline-block;
+    width: 120px;
+    color: #fff;
+    font-weight: bold;
+    vertical-align: top;
+    margin-bottom: 5px;
+}
+
+.addnhost-entry input[type="text"] {
+    width: 350px;
+    margin-right: 15px;
+    margin-bottom: 8px;
+    padding: 4px 6px;
+    border: 1px solid #666;
+    background-color: #1F2D35;
+    color: #fff;
+    font-family: monospace;
+}
+
+.addnhost-entry input[type="text"]:focus {
+    border-color: #0099CC;
+    background-color: #2F3A3E;
+}
+
+.addnhost-entry input[type="button"] {
+    margin-left: 10px;
+    padding: 4px 12px;
+    background-color: #8B0000;
+    color: #fff;
+    border: 1px solid #666;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.addnhost-entry input[type="button"]:hover {
+    background-color: #AA0000;
+}
+
+/* Form field styling */
+input[type="text"], input[type="password"], select, textarea {
+    background-color: #1F2D35;
+    color: #fff;
+    border: 1px solid #666;
+    padding: 4px 6px;
+}
+
+input[type="text"]:focus, input[type="password"]:focus, select:focus, textarea:focus {
+    border-color: #0099CC;
+    background-color: #2F3A3E;
+}
+
+input[type="checkbox"] {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Button styling */
+.button_gen {
+    background-color: #4d595d;
+    color: #fff;
+    border: 1px solid #000;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.button_gen:hover {
+    background-color: #5d696d;
+}
+
+.button_gen:active {
+    background-color: #3d494d;
+}
+
+/* Add new button specific styling */
+.add-button {
+    background-color: #0066CC;
+    margin-top: 10px;
+}
+
+.add-button:hover {
+    background-color: #0088EE;
+}
+
+/* Error and validation styling */
+.error {
+    color: #ff6b6b;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.success {
+    color: #51cf66;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Tooltip styling */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+    color: #0099CC;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    font-size: 12px;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+/* Section dividers */
+.section-divider {
+    border-top: 1px solid #666;
+    margin: 20px 0;
+}
+
+/* Loading animation */
+.loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #666;
+    border-radius: 50%;
+    border-top-color: #0099CC;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .addnhost-entry input[type="text"] {
+        width: 280px;
+        margin-bottom: 10px;
+    }
+    
+    .addnhost-entry label {
+        width: 100px;
+    }
+}
+
+/* Dark theme consistency */
+body {
+    background-color: #1a1a1a;
+    color: #fff;
+}
+
+.FormTitle {
+    background-color: #4D595D;
+}
+
+.formfontdesc {
+    color: #ccc;
+}
+
+/* Status indicators */
+.status-enabled {
+    color: #51cf66;
+    font-weight: bold;
+}
+
+.status-disabled {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.status-warning {
+    color: #ffd43b;
+    font-weight: bold;
+}
